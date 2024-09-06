@@ -1,0 +1,174 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Genre {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  name      String   @unique
+  icon      String   @default("")
+  emoji     String   @default("")
+  users     User[]
+  books     Book[]   @relation("BookGenre")
+  mainBooks Book[]   @relation("BookMajorGenre")
+
+  @@index([id], name: "genre_index")
+}
+
+model Author {
+  id          String   @id @default(uuid())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  name        String   @unique
+  description String
+  picture     String
+  books       Book[]
+
+  @@index([name], name: "author_name_index")
+}
+
+model Book {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  title     String   @unique
+  slug      String   @unique
+
+  description   String
+  recommendable Boolean @default(true)
+
+  picture String
+  ebook   String
+
+  // Minutes
+  readingTime    Int              @default(0)
+  // Chapters count
+  chapters       Int              @default(0)
+  pagesCount     Int              @default(0)
+  rating         Float            @default(0)
+  isPublic       Boolean          @default(false)
+  mainGenreId    String
+  mainGenre      Genre            @relation("BookMajorGenre", fields: [mainGenreId], references: [id])
+  genres         Genre[]          @relation("BookGenre")
+  finishedBy     User[]           @relation("FinishedBooks")
+  savedBy        User[]           @relation("SavedBooks")
+  readingBy      User[]           @relation("ReadingBooks")
+  readingHistory ReadingHistory[]
+  reactions      Reaction[]
+  // серия книги может быть одна но не обязательно
+  bookSeries     BookSeries?      @relation(fields: [bookSeriesId], references: [id])
+  Collections    Collection[]
+  keyPoints      String
+  author         Author           @relation(fields: [authorId], references: [id])
+
+  authorId     String
+  bookSeriesId String?
+
+  @@index([id], name: "book_index")
+}
+
+// модель серии книг
+model BookSeries {
+  id          String   @id @default(uuid())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  title       String   @unique
+  description String
+  books       Book[]
+
+  @@index([id], name: "book_series_index")
+}
+
+model Collection {
+  id          String   @id @default(uuid())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  title       String   @unique
+  description String
+  banner      String
+  books       Book[]
+
+  @@index([id], name: "collection_index")
+}
+
+model Reaction {
+  id          String   @id @default(uuid())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  type        String
+  description String?
+  text        String
+  xpath       String
+  startOffset Int
+  endOffset   Int
+  user        User     @relation(fields: [userId], references: [id])
+  book        Book     @relation(fields: [bookId], references: [id])
+  userId      String
+  bookId      String
+
+  @@index([id], name: "reaction_id_index")
+}
+
+model User {
+  id             String           @id @default(uuid())
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  email          String           @unique
+  goalMinutes    Int              @default(10)
+  socialId       String?          @unique
+  password       String?
+  authType       AuthType         @default(email)
+  selectedGenres Genre[]
+  reactions      Reaction[]
+  picture        String           @default("fallback.png")
+  fullName       String           @default("unknown")
+  location       String           @default("unknown")
+  role           Role             @default(user)
+  savedBooks     Book[]           @relation("SavedBooks")
+  finishedBooks  Book[]           @relation("FinishedBooks")
+  readingBooks   Book[]           @relation("ReadingBooks")
+  readingHistory ReadingHistory[]
+
+  @@index([id], name: "user_id_index")
+}
+
+model ReadingHistory {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  startDate      DateTime
+  endDate        DateTime
+  readingTimeMs  Int
+  scrollPosition Int
+  startProgress  Float
+  endProgress    Float
+  progressDelta  Float
+  book           Book     @relation(fields: [bookId], references: [id])
+  user           User     @relation(fields: [userId], references: [id])
+  bookId         String
+  userId         String
+
+  @@index([userId], name: "reading_history_user_id_index")
+}
+
+enum Role {
+  user
+  admin
+}
+
+enum StorageFolderEnum {
+  ebooks
+  booksCovers
+}
+
+enum AuthType {
+  email
+  google
+}

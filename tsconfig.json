@@ -1,0 +1,26 @@
+{
+  "compilerOptions": {
+    "module": "commonjs",
+    "types": ["node", "express", "multer", "jest"],
+    "lib": ["es5", "es6", "dom", "dom.iterable","ES2023"],
+    "rootDir": ".",
+    "sourceMap": true,
+    "declaration": true,
+    "incremental": true,
+    "moduleResolution": "node",
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "strictNullChecks": false,
+    "noImplicitThis": true,
+    "outDir": "./dist",
+    "target": "es2021",
+    "skipLibCheck": true,
+    "skipDefaultLibCheck": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./*"]
+    }
+  }
+}
