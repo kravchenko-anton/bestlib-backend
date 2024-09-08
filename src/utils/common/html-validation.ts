@@ -1,14 +1,14 @@
-import axios from 'axios'
+import axios from 'axios';
 
 type HtmlValidationMessageType = {
-	message: string
-	extract: string
-	lastLine: number
-	lastColumn: number
-	firstColumn: number
-	hiliteStart: number
-	hiliteLength: number
-}
+	message: string;
+	extract: string;
+	lastLine: number;
+	lastColumn: number;
+	firstColumn: number;
+	hiliteStart: number;
+	hiliteLength: number;
+};
 export const postProcessingHtml = (html: string) => `
 		<!DOCTYPE html>
 		<html lang="en">
@@ -19,8 +19,7 @@ export const postProcessingHtml = (html: string) => `
 				${html}
 			</body>
 		</html>
-	
-	`
+	`;
 export const checkHtmlValid = async (html: string) => {
 	const request = await axios
 		.request({
@@ -33,15 +32,15 @@ export const checkHtmlValid = async (html: string) => {
 			}
 		})
 		.catch(error => {
-			console.log('html-validation error', error)
-			throw new Error('Html validation error')
-		})
+			console.log('html-validation error', error);
+			throw new Error('Html validation error');
+		});
 
 	const skippedErrors = [
 		'Element “dl” is missing a required child element',
 		'Section lacks heading',
 		'This document appears to be written in Russian'
-	]
+	];
 	const messages = request.data.messages
 		.filter(
 			(message: HtmlValidationMessageType) =>
@@ -52,10 +51,10 @@ export const checkHtmlValid = async (html: string) => {
 		.map(
 			(message: HtmlValidationMessageType) =>
 				`${message.message} at line ${message.lastLine} column ${message.lastColumn}:\n${message.extract}`
-		)
-	console.log('html-validation', request)
+		);
+	console.log('html-validation', request);
 	return {
 		messages: messages,
 		isValid: messages.length === 0
-	}
-}
+	};
+};

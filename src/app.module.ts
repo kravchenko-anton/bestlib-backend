@@ -8,7 +8,6 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
 import { BookModule } from './book/book.module';
-import { EbookModule } from './book/ebook/ebook.module';
 import { CatalogModule } from './catalog/catalog.module';
 import { GenreModule } from './genre/genre.module';
 import { HealthModule } from './health/health.module';
@@ -19,7 +18,7 @@ import { UserModule } from './user/user.module';
 import { AppLoggerMiddleware } from './utils/logger/logger';
 import { ReadingModule } from './reading/reading.module';
 import { AuthorModule } from './author/author.module';
-import { ParserModule } from '@/src/parser/parser.module';
+import { EbookModule } from '@/src/ebook/ebook.module';
 
 @Module({
 	imports: [
@@ -32,7 +31,6 @@ import { ParserModule } from '@/src/parser/parser.module';
 		GenreModule,
 		BookModule,
 		AuthModule,
-		ParserModule,
 		StorageModule,
 		CacheModule.register({
 			isGlobal: true,

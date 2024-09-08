@@ -8,7 +8,7 @@ import { ReturnGenreObject } from './return.genre.object';
 export class GenreService {
 	constructor(private readonly prisma: PrismaService) {}
 
-	catalog() {
+	async catalog() {
 		return this.prisma.genre.findMany({
 			select: ReturnGenreObject
 		});

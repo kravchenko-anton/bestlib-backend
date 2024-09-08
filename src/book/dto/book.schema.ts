@@ -16,7 +16,6 @@ export const BookSchema = z
 	.object({
 		description: z.string(),
 		readingTime: z.number(),
-		chapters: z.number(),
 		rating: z.number(),
 		isPublic: z.boolean(),
 		genres: z.array(ShortGenreSchema)

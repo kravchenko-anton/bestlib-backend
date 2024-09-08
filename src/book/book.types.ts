@@ -8,16 +8,12 @@ export class UpdateBookDtoExtended extends PickType(UpdateBookDto, [
 	'picture',
 	'rating'
 ]) {
-	ebook?: string;
-	pagesCount?: number;
 	slug?: string;
 	author?: {
 		connect: {
 			id: string;
 		};
 	};
-	readingTime?: number;
-	chapters?: number;
 	genres?: { set: { id: string }[] };
 	mainGenre?: { connect: { id: string } };
 }

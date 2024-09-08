@@ -1,9 +1,7 @@
 import { ReturnGenreObject } from '@/src/genre/return.genre.object';
 import { Prisma } from '@prisma/client';
-import { slugify } from '@/src/utils/helpers/slugify';
-import { CreateBookSchemaType } from '@/src/book/dto/create.book.schema';
 
-export const infoBySlug = {
+export const infoBySlug = Prisma.validator<Prisma.BookSelect>()({
 	title: true,
 	isPublic: true,
 	id: true,
@@ -13,16 +11,15 @@ export const infoBySlug = {
 		select: {
 			id: true,
 			name: true,
-			avatar: true
+			picture: true
 		}
 	},
 
 	description: true,
 	mainGenre: false,
-	readingTime: true,
 	rating: true,
 	genres: { select: ReturnGenreObject }
-};
+});
 export const infoBySlugAdminFields: (bookId: string) => Prisma.BookSelect = (
 	bookId: string
 ) =>
@@ -31,18 +28,15 @@ export const infoBySlugAdminFields: (bookId: string) => Prisma.BookSelect = (
 		chapters: true,
 		title: true,
 		picture: true,
-		recommendable: true,
+		isRecommendable: true,
 		author: true,
 		slug: true,
 		createdAt: true,
 		updatedAt: true,
 		rating: true,
-		pagesCount: true,
-		readingTime: true,
 		genres: {
 			select: ReturnGenreObject
 		},
-		ebook: true,
 		description: true,
 		isPublic: true,
 		_count: {
@@ -88,7 +82,6 @@ export const bookCatalogFields = ({
 			picture: true,
 			id: true,
 			genres: { select: ReturnGenreObject },
-			readingTime: true,
 			rating: true,
 			isPublic: true,
 			description: true,
@@ -115,46 +108,3 @@ export const bookCatalogFields = ({
 			})
 		})
 	}) as const;
-
-export const bookCreateFields = ({
-	dto,
-	genreIds,
-	mainGenreId,
-	ebookName,
-	readingTime,
-	chaptersCount,
-	pagesCount
-}: {
-	dto: CreateBookSchemaType;
-	genreIds: { id: string }[];
-	mainGenreId: string;
-	ebookName: string;
-	readingTime: number;
-	chaptersCount: number;
-	pagesCount: number;
-}) =>
-	Prisma.validator<Prisma.BookCreateInput>()({
-		pagesCount: pagesCount,
-		slug: dto.slug || slugify(dto.title),
-		chapters: chaptersCount,
-		title: dto.title,
-		picture: dto.picture,
-		rating: dto.rating,
-		readingTime: readingTime,
-		description: dto.description,
-		ebook: ebookName,
-		author: {
-			connect: {
-				id: dto.authorId
-			}
-		},
-		keyPoints: dto.keyPoints,
-		genres: {
-			connect: genreIds
-		},
-		mainGenre: {
-			connect: {
-				id: mainGenreId
-			}
-		}
-	});

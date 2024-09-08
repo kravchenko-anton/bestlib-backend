@@ -1,7 +1,7 @@
-import { returnBookObject } from '@/src/book/return.book.object'
-import { ReturnGenreObject } from '@/src/genre/return.genre.object'
-import { returnUserObject } from '@/src/user/return.user.object'
-import { Prisma } from '@prisma/client'
+import { returnBookObject } from '@/src/book/return.book.object';
+import { ReturnGenreObject } from '@/src/genre/return.genre.object';
+import { returnUserObject } from '@/src/user/return.user.object';
+import { Prisma } from '@prisma/client';
 
 export const userLibraryFields = (userId: string) =>
 	({
@@ -40,16 +40,16 @@ export const userLibraryFields = (userId: string) =>
 				}
 			}
 		})
-	}) as const
+	}) as const;
 
 export const userCatalogFields = ({
 	page,
 	perPage,
 	searchTerm
 }: {
-	page: number
-	perPage: number
-	searchTerm: string
+	page: number;
+	perPage: number;
+	searchTerm: string;
 }) =>
 	({
 		take: perPage,
@@ -73,12 +73,7 @@ export const userCatalogFields = ({
 					progressDelta: true,
 					readingTimeMs: true,
 					scrollPosition: true,
-					startDate: true,
-					book: {
-						select: {
-							pagesCount: true
-						}
-					}
+					startDate: true
 				}
 			},
 			_count: {
@@ -105,7 +100,7 @@ export const userCatalogFields = ({
 				}
 			})
 		})
-	}) as const
+	}) as const;
 
 export const userFinishReadingBookFields = (slug: string) =>
 	Prisma.validator<Prisma.UserUpdateInput>()({
@@ -124,7 +119,7 @@ export const userFinishReadingBookFields = (slug: string) =>
 				slug
 			}
 		}
-	})
+	});
 
 export const userRemoveFromLibraryFields = (slug: string) =>
 	Prisma.validator<Prisma.UserUpdateInput>()({
@@ -143,7 +138,7 @@ export const userRemoveFromLibraryFields = (slug: string) =>
 				slug
 			}
 		}
-	})
+	});
 
 export const userStartReadingBookFields = (slug: string) =>
 	Prisma.validator<Prisma.UserUpdateInput>()({
@@ -162,14 +157,14 @@ export const userStartReadingBookFields = (slug: string) =>
 				slug
 			}
 		}
-	})
+	});
 
 export const userToggleSaveFields = ({
 	isSavedExist,
 	slug
 }: {
-	isSavedExist: boolean
-	slug: string
+	isSavedExist: boolean;
+	slug: string;
 }) =>
 	Prisma.validator<Prisma.UserUpdateInput>()({
 		savedBooks: {
@@ -189,4 +184,4 @@ export const userToggleSaveFields = ({
 				}
 			}
 		})
-	})
+	});

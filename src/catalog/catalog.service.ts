@@ -16,6 +16,7 @@ export class CatalogService {
 	) {}
 
 	search(query: string) {
+		console.log(' start searching for:', query);
 		return this.prisma.book.findMany({
 			where: catalogSearchFields(query),
 			select: returnBookObject
@@ -23,6 +24,7 @@ export class CatalogService {
 	}
 
 	async featured(userId: string) {
+		console.log('start featured for:', userId);
 		const alreadyUsedBookSlugs: string[] = [];
 		const pushBooks = (books: ShortBook[]) => {
 			alreadyUsedBookSlugs.push(...books.map(book => book.id));
@@ -30,6 +32,7 @@ export class CatalogService {
 		};
 		const userSelectedGenres =
 			await this.recommendationService.userSelectedGenresById(userId);
+		console.log('get userSelectedGenres:', userSelectedGenres);
 		const booksBySelectedGenres = userSelectedGenres.map(genre =>
 			this.prisma.book.findMany({
 				take: 10,
@@ -54,8 +57,8 @@ export class CatalogService {
 				}
 			})
 		);
-
-		return {
+		console.log('get booksBySelectedGenres:', booksBySelectedGenres);
+		const response = {
 			picksOfWeek:
 				await this.picksOfTheWeek(alreadyUsedBookSlugs).then(pushBooks),
 			genres: await this.prisma.genre.findMany({}),
@@ -64,12 +67,18 @@ export class CatalogService {
 			newReleases: await this.newReleases(alreadyUsedBookSlugs).then(pushBooks),
 			booksBySelectedGenres: await Promise.all(booksBySelectedGenres)
 		};
+
+		console.log('get response:', response);
+		return response;
 	}
 
 	async picksOfTheWeek(skippedBookSlugs: string[] = []) {
+		console.log('start picksOfTheWeek');
 		const picksOfTheWeek: ShortBook[] | undefined =
 			await this.cacheManager.get('picksOfTheWeek');
+		console.log('get picksOfTheWeek:', picksOfTheWeek);
 		if (picksOfTheWeek) return picksOfTheWeek;
+
 		const picks = await this.prisma.book.findMany({
 			take: 10,
 			include: {
@@ -87,13 +96,17 @@ export class CatalogService {
 				}
 			}
 		});
+		console.log('fetch picks:', picks);
 		const timeToSave = 60 * 60 * 24 * 7; // 1 week
 		await this.cacheManager.set('picksOfTheWeek', picks, timeToSave);
+		console.log('set picksOfTheWeek:', picks);
+
 		return picks;
 	}
 
 	private bestSellersBooks(skippedBookSlugs: string[] = []) {
-		return this.prisma.book.findMany({
+		console.log('start bestSellersBooks');
+		const books = this.prisma.book.findMany({
 			take: 10,
 			where: {
 				isPublic: true,
@@ -113,10 +126,13 @@ export class CatalogService {
 				}
 			}
 		});
+		console.log('get bestSellersBooks:', books);
+		return books;
 	}
 
 	private newReleases(skippedBookSlugs: string[] = []) {
-		return this.prisma.book.findMany({
+		console.log('start newReleases');
+		const books = this.prisma.book.findMany({
 			take: 10,
 			include: {
 				author: {
@@ -136,5 +152,7 @@ export class CatalogService {
 				createdAt: 'desc'
 			}
 		});
+		console.log('get newReleases:', books);
+		return books;
 	}
 }

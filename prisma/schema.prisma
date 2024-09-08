@@ -33,39 +33,47 @@ model Author {
   @@index([name], name: "author_name_index")
 }
 
-model Book {
+model Chapter {
   id        String   @id @default(uuid())
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  title     String   @unique
-  slug      String   @unique
+  title     String
+  content   String
 
-  description   String
-  recommendable Boolean @default(true)
+  position Int
+  bookId   String
+  book     Book   @relation(fields: [bookId], references: [id])
 
-  picture String
-  ebook   String
+  @@index([id], name: "chapter_index")
+}
 
-  // Minutes
-  readingTime    Int              @default(0)
-  // Chapters count
-  chapters       Int              @default(0)
-  pagesCount     Int              @default(0)
-  rating         Float            @default(0)
-  isPublic       Boolean          @default(false)
-  mainGenreId    String
-  mainGenre      Genre            @relation("BookMajorGenre", fields: [mainGenreId], references: [id])
-  genres         Genre[]          @relation("BookGenre")
-  finishedBy     User[]           @relation("FinishedBooks")
-  savedBy        User[]           @relation("SavedBooks")
-  readingBy      User[]           @relation("ReadingBooks")
-  readingHistory ReadingHistory[]
-  reactions      Reaction[]
-  // серия книги может быть одна но не обязательно
-  bookSeries     BookSeries?      @relation(fields: [bookSeriesId], references: [id])
-  Collections    Collection[]
-  keyPoints      String
-  author         Author           @relation(fields: [authorId], references: [id])
+model Book {
+  id              String           @id @default(uuid())
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  title           String           @unique
+  slug            String           @unique
+  age             age              @default(all)
+  gender          gender           @default(other)
+  description     String
+  summary         String
+  concept         String
+  picture         String
+  rating          Float            @default(0)
+  isPublic        Boolean          @default(false)
+  isRecommendable Boolean          @default(true)
+  mainGenreId     String
+  mainGenre       Genre            @relation("BookMajorGenre", fields: [mainGenreId], references: [id])
+  genres          Genre[]          @relation("BookGenre")
+  finishedBy      User[]           @relation("FinishedBooks")
+  savedBy         User[]           @relation("SavedBooks")
+  readingBy       User[]           @relation("ReadingBooks")
+  chapters        Chapter[]
+  readingHistory  ReadingHistory[]
+  reactions       Reaction[]
+  bookSeries      BookSeries?      @relation(fields: [bookSeriesId], references: [id])
+  Collections     Collection[]
+  author          Author           @relation(fields: [authorId], references: [id])
 
   authorId     String
   bookSeriesId String?
@@ -121,10 +129,13 @@ model User {
   updatedAt      DateTime         @updatedAt
   email          String           @unique
   goalMinutes    Int              @default(10)
+  isUserPassQuiz Boolean          @default(false)
   socialId       String?          @unique
   password       String?
   authType       AuthType         @default(email)
   selectedGenres Genre[]
+  gender         gender           @default(other)
+  age            age              @default(all)
   reactions      Reaction[]
   picture        String           @default("fallback.png")
   fullName       String           @default("unknown")
@@ -166,6 +177,19 @@ enum Role {
 enum StorageFolderEnum {
   ebooks
   booksCovers
+}
+
+enum gender {
+  male
+  female
+  other
+}
+
+enum age {
+  all
+  kids
+  teens
+  adults
 }
 
 enum AuthType {

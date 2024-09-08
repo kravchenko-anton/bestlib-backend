@@ -10,13 +10,12 @@ import {
 import { statisticReduce } from '@/src/utils/services/statisticReduce.service';
 import { HttpStatus, Injectable } from '@nestjs/common';
 import type { Prisma } from '@prisma/client';
-import dayjs from 'dayjs';
 import { slugSelect } from '../utils/common/return.default.object';
 import { serverError } from '../utils/helpers/server-error';
 import { PrismaService } from '../utils/services/prisma.service';
 import { returnUserObject } from './return.user.object';
-//@ts-ignore
-import utc from 'dayjs/plugin/utc';
+import dayjs from 'dayjs';
+import 'dayjs/plugin/utc';
 
 @Injectable()
 export class UserService {
@@ -133,9 +132,8 @@ export class UserService {
 			data: data.map(({ readingHistory, ...user }) => ({
 				...user,
 				statistics: statisticReduce({
-					statistics: readingHistory.map(({ book, ...history }) => ({
-						...history,
-						pagesCount: book.pagesCount
+					statistics: readingHistory.map(({ ...history }) => ({
+						...history
 					})),
 					initialDate: user.createdAt
 				})
@@ -218,19 +216,6 @@ export class UserService {
 		return !isSavedExist;
 	}
 
-	private async checkBookExist(slug: string) {
-		const book = await this.prisma.book.findUnique({
-			where: { slug, isPublic: true },
-			select: {
-				id: true,
-				title: true
-			}
-		});
-		if (!book)
-			throw serverError(HttpStatus.BAD_REQUEST, 'Something went wrong');
-		return !!book;
-	}
-
 	public async isSaved(userId: string, slug: string) {
 		await this.checkBookExist(slug);
 		const user = await this.prisma.user.findUnique({
@@ -243,5 +228,18 @@ export class UserService {
 		if (!user)
 			throw serverError(HttpStatus.BAD_REQUEST, "Something's wrong, try again");
 		return user.savedBooks.some(book => book.slug === slug);
+	}
+
+	private async checkBookExist(slug: string) {
+		const book = await this.prisma.book.findUnique({
+			where: { slug, isPublic: true },
+			select: {
+				id: true,
+				title: true
+			}
+		});
+		if (!book)
+			throw serverError(HttpStatus.BAD_REQUEST, 'Something went wrong');
+		return !!book;
 	}
 }

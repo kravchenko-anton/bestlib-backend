@@ -1,6 +1,4 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
-
-import { StorageService } from '../storage/storage.service';
 import { serverError } from '../utils/helpers/server-error';
 import { PrismaService } from '../utils/services/prisma.service';
 import type { Book, CreateBookDto, UpdateBookDto } from './dto/book.dto';
@@ -8,39 +6,34 @@ import type { UpdateBookDtoExtended } from './book.types';
 
 import {
 	bookCatalogFields,
-	bookCreateFields,
 	infoBySlug,
 	infoBySlugAdminFields
 } from '@/src/book/book.fields';
 import { returnBookObject } from '@/src/book/return.book.object';
 import { statisticReduce } from '@/src/utils/services/statisticReduce.service';
-import { useEbookCalculation } from './helpers/get-ebook';
 import { checkHtmlValid } from '@/src/utils/common/html-validation';
 import { slugify } from '@/src/utils/helpers/slugify';
 
 @Injectable()
 export class BookService {
-	constructor(
-		private readonly prisma: PrismaService,
-		private storageService: StorageService
-	) {}
+	constructor(private readonly prisma: PrismaService) {}
 
 	async infoBySlug(slug: string) {
+		console.log('try to get book by slug', slug);
 		const book = await this.prisma.book.findUnique({
 			where: { slug, isPublic: true },
 			select: infoBySlug
 		});
+
 		if (!book)
 			throw serverError(HttpStatus.BAD_REQUEST, "Something's wrong, try again");
-
+		console.log('book was found', book);
 		return {
 			...book,
 			fromSameAuthor: await this.prisma.book.findMany({
 				where: {
 					isPublic: true,
-					author: {
-						id: book.author.id
-					},
+					authorId: book.author.id,
 					id: {
 						not: book.id
 					}
@@ -63,8 +56,7 @@ export class BookService {
 			...rest,
 			statistics: statisticReduce({
 				statistics: readingHistory.map(statistics => ({
-					...statistics,
-					pagesCount: book.pagesCount
+					...statistics
 				})),
 				initialDate: book.createdAt,
 				nowDate: true
@@ -73,6 +65,7 @@ export class BookService {
 	}
 
 	async catalog(searchTerm: string, page: number) {
+		console.log('try to get book catalog', searchTerm, page);
 		const perPage = 20;
 		const count = await this.prisma.book.count();
 		return {
@@ -85,87 +78,75 @@ export class BookService {
 	}
 
 	async create(dto: CreateBookDto) {
+		console.log('try to create book', dto);
 		const { genreIds, mainGenreId } = await this.getGenres(dto.genres);
-		const { readingTime, uploadedEbook, pagesCount, chaptersCount } =
-			useEbookCalculation(dto.ebook);
+		console.log('get genres for book', genreIds, mainGenreId);
 
 		const { isValid, messages } = await checkHtmlValid(
-			uploadedEbook
-				.map(book =>
-					book.chapters.map(chapter => `${chapter.text}`.trim()).join('')
-				)
-				.join('')
+			dto.chapters.map(book => book.content).join('')
 		);
-		console.log('isValid', isValid);
+
 		if (!isValid) throw serverError(HttpStatus.BAD_REQUEST, messages);
-
-		const { name: ebookName } = await this.storageService.upload({
-			folder: 'ebooks',
-			file: Buffer.from(JSON.stringify(uploadedEbook)),
-			fileName: dto.title + '.json'
+		console.log('try to create book', dto.title);
+		const book = await this.prisma.book.create({
+			data: {
+				summary: dto.summary,
+				concept: dto.concept,
+				slug: dto.slug || slugify(dto.title),
+				title: dto.title,
+				picture: dto.picture,
+				rating: dto.rating,
+				description: dto.description,
+				author: {
+					connect: {
+						id: dto.authorId
+					}
+				},
+				genres: {
+					connect: genreIds
+				},
+				mainGenre: {
+					connect: {
+						id: mainGenreId
+					}
+				}
+			}
 		});
+		console.log('book created success, try create chapters');
 
-		await this.prisma.book.create({
-			data: bookCreateFields({
-				dto,
-				genreIds,
-				mainGenreId,
-				ebookName,
-				readingTime,
-				chaptersCount,
-				pagesCount
-			})
+		await this.prisma.chapter.createMany({
+			data: dto.chapters.map(chapter => ({
+				bookId: book.id,
+				title: chapter.title,
+				content: chapter.content,
+				position: chapter.position
+			}))
 		});
+		console.log('chapters created success');
 	}
 
 	async remove(slug: string) {
 		//TODO: сделать так, чтобы при удалении книги удалялись все статистики по ней
+		console.log('try to delete book', slug);
 		await this.prisma.book.delete({ where: { slug } });
 	}
 
 	//TODO: переделать обновление  с такого на более лучшее
 	async update(slug: string, dto: UpdateBookDto) {
+		console.log('try to update book', slug, dto);
 		const book = await this.prisma.book.findUnique({
 			where: { slug },
 			select: {
 				id: true,
-				title: true,
-				ebook: true
+				title: true
 			}
 		});
 		if (!book) throw serverError(HttpStatus.BAD_REQUEST, "Book doesn't exist");
-		const { genres, title, ebook, authorId, ...rest } = dto;
-
+		console.log('book was found', book);
+		const { genres, title, authorId, ...rest } = dto;
 		let updateData: UpdateBookDtoExtended = {
 			...rest
 		};
-
-		if (ebook) {
-			const { uploadedEbook, readingTime, pagesCount, chaptersCount } =
-				useEbookCalculation(ebook);
-			const { isValid, messages } = await checkHtmlValid(
-				uploadedEbook
-					.map(book =>
-						book.chapters.map(chapter => `${chapter.text}`.trim()).join('')
-					)
-					.join('')
-			);
-			if (!isValid) throw serverError(HttpStatus.BAD_REQUEST, messages);
-
-			const { name: ebookName } = await this.storageService.upload({
-				folder: 'ebooks',
-				file: Buffer.from(JSON.stringify(uploadedEbook)),
-				fileName: `${book.title}.json`
-			});
-
-			updateData = {
-				...updateData,
-				ebook: ebookName,
-				readingTime,
-				pagesCount,
-				chapters: chaptersCount
-			};
-		}
 
 		if (genres) {
 			const { genreIds, mainGenreId } = await this.getGenres(genres);

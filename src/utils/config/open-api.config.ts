@@ -9,7 +9,7 @@ export const openApiConfig = new DocumentBuilder()
 		'Github repository'
 	)
 	.setVersion('1.0')
-	.addTag('👤 user.tsx', 'user.tsx service')
+	.addTag('👤 user', 'user service')
 	.addTag('🔐 auth', 'auth service')
 	.addTag('📙 book', 'book service')
 	.addTag('📚 catalog', 'catalog service')
@@ -21,7 +21,7 @@ export const openApiConfig = new DocumentBuilder()
 	.addTag('📦 parser', 'parser service')
 	.addBearerAuth();
 
-export const typesGeneratorConfig = {
+export const typesGeneratorConfigMobile = {
 	webServerOptions: {
 		enabled: process.env.NODE_ENV === 'development',
 		path: 'api-docs'
@@ -34,7 +34,27 @@ export const typesGeneratorConfig = {
 	clientGeneratorOptions: {
 		enabled: process.env.NODE_ENV === 'development',
 		type: 'typescript-axios',
-		outputFolderPath: './api-client',
+		outputFolderPath: '../mobile/api-client',
+		additionalProperties:
+			'apiPackage=clients,modelPackage=models,withoutPrefixEnums=true,withSeparateModelsAndApi=true',
+		openApiFilePath: './openapi.json',
+		skipValidation: true
+	}
+};
+export const typesGeneratorConfigAdmin = {
+	webServerOptions: {
+		enabled: process.env.NODE_ENV === 'development',
+		path: 'api-docs'
+	},
+	fileGeneratorOptions: {
+		enabled: process.env.NODE_ENV === 'development',
+		outputFilePath: './openapi.json' // or ./openapi.json
+	},
+
+	clientGeneratorOptions: {
+		enabled: process.env.NODE_ENV === 'development',
+		type: 'typescript-axios',
+		outputFolderPath: '../admin/api-client',
 		additionalProperties:
 			'apiPackage=clients,modelPackage=models,withoutPrefixEnums=true,withSeparateModelsAndApi=true',
 		openApiFilePath: './openapi.json',

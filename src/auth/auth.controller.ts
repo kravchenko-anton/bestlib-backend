@@ -24,7 +24,7 @@ export class AuthController {
 	@Post('/mail-register')
 	@ApiBody({
 		type: AuthDto,
-		description: 'Register new user.tsx'
+		description: 'Register new user'
 	})
 	@ApiOkResponse({
 		description: 'Return access and refresh token',
@@ -37,7 +37,7 @@ export class AuthController {
 	@Post('/mail-login')
 	@ApiBody({
 		type: AuthDto,
-		description: 'Login user.tsx'
+		description: 'Login user'
 	})
 	@ApiOkResponse({
 		description: 'Return access and refresh token',
