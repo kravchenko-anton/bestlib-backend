@@ -1,62 +1,62 @@
 export const setupGenres = [
 	{
 		name: 'Young Adult',
-		slug: 'young-adult',
+		emoji: '👶',
 		icon: 'icons/genre/young-adult.svg'
 	},
 	{
 		name: 'Fiction',
-		slug: 'fiction',
+		emoji: '📚',
 		icon: 'icons/genre/fiction.svg'
 	},
 	{
 		name: 'Fantasy',
-		slug: 'fantasy',
+		emoji: '🧙',
 		icon: 'icons/genre/fantasy.svg'
 	},
 	{
 		name: 'Classics',
-		slug: 'classics',
+		emoji: '📜',
 		icon: 'icons/genre/classics.svg'
 	},
 	{
 		name: 'Romance',
-		slug: 'romance',
+		emoji: '💑',
 		icon: 'icons/genre/romance.svg'
 	},
 	{
 		name: 'Novels',
-		slug: 'novels',
+		emoji: '📖',
 		icon: 'icons/genre/novels.svg'
 	},
 	{
 		name: 'Dystopia',
-		slug: 'dystopia',
+		emoji: '🏙️',
 		icon: 'icons/genre/dystopia.svg'
 	},
 	{
 		name: 'Horror',
-		slug: 'horror',
+		emoji: '👻',
 		icon: 'icons/genre/horror.svg'
 	},
 	{
 		name: 'War',
-		slug: 'war',
+		emoji: '⚔️',
 		icon: 'icons/genre/war.svg'
 	},
 	{
 		name: 'Historical',
-		slug: 'historical',
+		emoji: '🕰️',
 		icon: 'icons/genre/historical.svg'
 	},
 	{
 		name: 'Science',
-		slug: 'science',
+		emoji: '🔬',
 		icon: 'icons/genre/science.svg'
 	},
 	{
 		name: 'Self-improvement',
-		slug: 'self-improvement',
+		emoji: '🌱',
 		icon: 'icons/genre/self-improvement.svg'
 	}
-]
+];

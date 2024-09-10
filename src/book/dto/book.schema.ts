@@ -14,6 +14,8 @@ export const ShortBookSchema = z.object({
 });
 export const BookSchema = z
 	.object({
+		summary: z.string(),
+		concept: z.string(),
 		description: z.string(),
 		readingTime: z.number(),
 		rating: z.number(),
@@ -27,8 +29,8 @@ export const FullBookSchema = BookSchema.merge(
 		.object({
 			createdAt: z.date(),
 			updatedAt: z.date(),
-			recommendable: z.boolean(),
-			ebook: z.string(),
+			authorId: z.string(),
+			isRecommendable: z.boolean(),
 			_count: z
 				.object({
 					finishedBy: z.number(),

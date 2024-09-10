@@ -1,5 +1,5 @@
 import {
-	CatalogOutput,
+	BookCatalogOutput,
 	CreateBookDto,
 	FullBook,
 	InfoBySlug,
@@ -33,23 +33,23 @@ export class BookController {
 	@Get('/info/by-slug/:slug')
 	@ApiOkResponse({ type: InfoBySlug })
 	async infoBySlug(@Param('slug') bookSlug: string): Promise<InfoBySlug> {
-		return this.bookService.infoBySlug(bookSlug);
+		return this.bookService.infoById(bookSlug);
 	}
 
 	@Auth('admin')
 	@Get('/admin-info/by-id/:id')
 	@ApiOkResponse({ type: FullBook })
 	async adminInfoById(@Param('id') id: string): Promise<FullBook> {
-		return this.bookService.infoBySlugAdmin(id);
+		return this.bookService.infoByIdAdmin(id);
 	}
 
 	@Auth('admin')
 	@Get('/admin/catalog')
-	@ApiOkResponse({ type: CatalogOutput })
+	@ApiOkResponse({ type: BookCatalogOutput })
 	async catalog(
 		@Query('searchTerm') searchTerm: string,
 		@Query('page') page: number
-	): Promise<CatalogOutput> {
+	): Promise<BookCatalogOutput> {
 		return this.bookService.catalog(searchTerm, page || 1);
 	}
 

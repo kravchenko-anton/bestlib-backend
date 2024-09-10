@@ -1,20 +1,30 @@
 import { z } from 'zod';
 
-export const ChapterPayloadSchema = z.object({
+export const ChapterSchema = z.object({
 	title: z.string().refine(value => value !== 'undefined', {
 		message: 'Name cannot be empty'
 	}),
 	content: z.string(),
-	position: z.number()
+	position: z.number(),
+	id: z.string()
 });
 
-export const UnfoldChapterSchema = z
-	.object({
-		id: z.string()
-	})
-	.merge(ChapterPayloadSchema.omit({ position: true }));
+export const UpdateChapterSchema = z.object({
+	title: z
+		.string()
+		.refine(value => value !== 'undefined', {
+			message: 'Name cannot be empty'
+		})
+		.optional(),
+	content: z.string().optional(),
+	position: z.number().optional()
+});
+
+export const ChapterPayloadSchema = ChapterSchema.omit({ id: true });
+
+export const UnfoldChapterSchema = ChapterSchema.omit({ position: true });
 export const OutputChapterSchema = z.object({
-	name: z.string(),
+	title: z.string(),
 	link: z.string()
 });
 

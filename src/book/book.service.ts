@@ -6,8 +6,8 @@ import type { UpdateBookDtoExtended } from './book.types';
 
 import {
 	bookCatalogFields,
-	infoBySlug,
-	infoBySlugAdminFields
+	infoByIdAdminFields,
+	infoBySlug
 } from '@/src/book/book.fields';
 import { returnBookObject } from '@/src/book/return.book.object';
 import { statisticReduce } from '@/src/utils/services/statisticReduce.service';
@@ -18,7 +18,7 @@ import { slugify } from '@/src/utils/helpers/slugify';
 export class BookService {
 	constructor(private readonly prisma: PrismaService) {}
 
-	async infoBySlug(slug: string) {
+	async infoById(slug: string) {
 		console.log('try to get book by slug', slug);
 		const book = await this.prisma.book.findUnique({
 			where: { slug, isPublic: true },
@@ -43,10 +43,10 @@ export class BookService {
 		};
 	}
 
-	async infoBySlugAdmin(id: string) {
+	async infoByIdAdmin(id: string) {
 		const book = await this.prisma.book.findUnique({
 			where: { id },
-			select: infoBySlugAdminFields(id)
+			select: infoByIdAdminFields(id)
 		});
 		if (!book)
 			throw serverError(HttpStatus.BAD_REQUEST, "Something's wrong, try again");
@@ -132,17 +132,7 @@ export class BookService {
 	}
 
 	//TODO: переделать обновление  с такого на более лучшее
-	async update(slug: string, dto: UpdateBookDto) {
-		console.log('try to update book', slug, dto);
-		const book = await this.prisma.book.findUnique({
-			where: { slug },
-			select: {
-				id: true,
-				title: true
-			}
-		});
-		if (!book) throw serverError(HttpStatus.BAD_REQUEST, "Book doesn't exist");
-		console.log('book was found', book);
+	async update(id: string, dto: UpdateBookDto) {
 		const { genres, title, authorId, ...rest } = dto;
 		let updateData: UpdateBookDtoExtended = {
 			...rest
@@ -185,7 +175,7 @@ export class BookService {
 		}
 
 		await this.prisma.book.update({
-			where: { id: book.id },
+			where: { id: id },
 			data: updateData
 		});
 	}

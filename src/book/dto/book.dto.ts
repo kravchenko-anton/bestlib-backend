@@ -19,5 +19,5 @@ export class ShortBook extends createZodDto(ShortBookSchema) {}
 export class UpdateBookDto extends createZodDto(UpdateBookSchema) {}
 export class Book extends createZodDto(BookSchema) {}
 export class FullBook extends createZodDto(FullBookSchema) {}
-export class CatalogOutput extends createZodDto(CatalogOutputSchema) {}
+export class BookCatalogOutput extends createZodDto(CatalogOutputSchema) {}
 export class InfoBySlug extends createZodDto(infoBySlugSchema) {}

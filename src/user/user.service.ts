@@ -15,7 +15,6 @@ import { serverError } from '../utils/helpers/server-error';
 import { PrismaService } from '../utils/services/prisma.service';
 import { returnUserObject } from './return.user.object';
 import dayjs from 'dayjs';
-import 'dayjs/plugin/utc';
 
 @Injectable()
 export class UserService {
@@ -41,12 +40,12 @@ export class UserService {
 			skipDuplicates: true,
 			data: dto.map(history => ({
 				readingTimeMs: history.readingTimeMs,
-				endDate: dayjs(history.endDate).utc().toDate(),
+				endDate: dayjs(history.endDate).toDate(),
 				progressDelta: history.progressDelta,
 				startProgress: history.startProgress,
 				endProgress: history.endProgress,
 				scrollPosition: history.scrollPosition,
-				startDate: dayjs(history.startDate).utc().toDate(),
+				startDate: dayjs(history.startDate).toDate(),
 				userId: userId,
 
 				bookId: history.bookId

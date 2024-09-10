@@ -2,7 +2,6 @@ import { HttpStatus, Injectable } from '@nestjs/common';
 
 import { JSDOM } from 'jsdom';
 import { slugify } from '@/src/utils/helpers/slugify';
-import { getFileUrl } from '@/src/utils/common/get-file-url';
 import { convertToRoman } from '@/src/book/helpers/romanize-number';
 import { calculateReadingTime } from '@/src/book/helpers/calculateReadingTime';
 import { PrismaService } from '@/src/utils/services/prisma.service';
@@ -10,11 +9,40 @@ import { serverError } from '@/src/utils/helpers/server-error';
 import { getChapterStructure } from '@/src/ebook/helpers/chapter-structure';
 import { getHtmlStructure } from '@/src/ebook/helpers/get-html-structure';
 import { ebookProcessing } from '@/src/ebook/helpers/unfold/unfold-ebook';
+import { UpdateChapterDto } from '@/src/ebook/dto/ebook.dto';
 
 @Injectable()
 export class EbookService {
 	constructor(private readonly prisma: PrismaService) {}
 
+	async updateChapter(chapterId: string, dto: UpdateChapterDto) {
+		console.log('start updating chapter:', chapterId, dto);
+		const chapter = await this.prisma.chapter.findUnique({
+			where: { id: chapterId },
+			select: {
+				bookId: true
+			}
+		});
+		console.log('chapter:', chapter, chapterId);
+		await this.prisma.chapter.update({
+			where: { id: chapterId, bookId: chapter.bookId },
+			data: dto
+		});
+	}
+	async adminEbookById(bookId: string) {
+		return this.prisma.chapter.findMany({
+			where: { bookId },
+			select: {
+				id: true,
+				title: true,
+				position: true,
+				content: true
+			},
+			orderBy: {
+				position: 'asc'
+			}
+		});
+	}
 	async ebookById(bookId: string) {
 		//TODO: сделать получение твоих цытат и сразу проверку на существование + gold цытаты
 		console.log("start getting ebook's content by id:", bookId);
@@ -50,25 +78,11 @@ export class EbookService {
 				romanNumber: convertToRoman(position)
 			})
 		);
-		console.log('get ebook content:', ebook.slice(0, 20));
 
 		const dom = new JSDOM(ebook.join(''));
 		console.log('start with jsdom');
-		const images = dom.window.document.querySelectorAll('img');
-		console.log('get images:', images.length);
-		for (const image of images) {
-			const sourcePath = image.getAttribute('src');
-			if (sourcePath) {
-				console.log('set image src with path', sourcePath);
-				image.src = getFileUrl(sourcePath);
-			} else {
-				console.log('remove image');
-				image.remove();
-			}
-		}
 
 		const file = dom.window.document.documentElement.outerHTML.toString();
-		console.log('get file:', file.slice(0, 20));
 		console.log('return result', book.title);
 		return {
 			...book,

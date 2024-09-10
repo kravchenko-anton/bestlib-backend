@@ -63,6 +63,7 @@ export class StorageController {
 		file: Express.Multer.File,
 		@Param('folder') folder: StorageFolderType
 	): Promise<UploadOutputDto> {
+		console.log(folder, 'uploading to this folder from backend');
 		return this.uploadService.upload({
 			file: file.buffer,
 			fileName: file.originalname,

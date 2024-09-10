@@ -20,15 +20,15 @@ export const infoBySlug = Prisma.validator<Prisma.BookSelect>()({
 	rating: true,
 	genres: { select: ReturnGenreObject }
 });
-export const infoBySlugAdminFields: (bookId: string) => Prisma.BookSelect = (
+export const infoByIdAdminFields: (bookId: string) => Prisma.BookSelect = (
 	bookId: string
 ) =>
 	Prisma.validator<Prisma.BookSelect>()({
 		id: true,
-		chapters: true,
 		title: true,
 		picture: true,
 		isRecommendable: true,
+		authorId: true,
 		author: true,
 		slug: true,
 		createdAt: true,
@@ -37,6 +37,8 @@ export const infoBySlugAdminFields: (bookId: string) => Prisma.BookSelect = (
 		genres: {
 			select: ReturnGenreObject
 		},
+		concept: true,
+		summary: true,
 		description: true,
 		isPublic: true,
 		_count: {
@@ -98,12 +100,14 @@ export const bookCatalogFields = ({
 		...(searchTerm && {
 			where: {
 				title: {
-					contains: searchTerm
+					contains: searchTerm,
+					mode: 'insensitive'
 				}
 			},
 			...(searchTerm && {
 				where: {
-					id: searchTerm
+					id: searchTerm,
+					mode: 'insensitive'
 				}
 			})
 		})

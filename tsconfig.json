@@ -5,6 +5,7 @@
     "lib": ["es5", "es6", "dom", "dom.iterable","ES2023"],
     "rootDir": ".",
     "sourceMap": true,
+    "strict": true,
     "declaration": true,
     "incremental": true,
     "moduleResolution": "node",

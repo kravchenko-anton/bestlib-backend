@@ -14,10 +14,11 @@ const removedTags = new Set([
 	'SUP',
 	'SUB',
 	'hr',
+	'IMAGE',
+	'IMG',
 	'HR'
 ]);
 export const clearHtmlTree = (element: Element): Element => {
-	console.log(element.tagName, 'element.tagName');
 	const attributes = element.getAttributeNames();
 	for (const attribute of attributes) {
 		if (attribute === 'src') continue;

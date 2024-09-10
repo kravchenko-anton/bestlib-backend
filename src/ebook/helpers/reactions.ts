@@ -1,4 +1,4 @@
-import { getFileUrl } from '../../../src/utils/common/get-file-url';
+import { getFileUrl } from '../../utils/common/get-file-url';
 
 export type Reaction = {
 	title: 'angry' | 'smile' | 'cry' | 'unbelievable' | 'thinking' | 'note';

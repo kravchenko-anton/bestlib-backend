@@ -7,14 +7,12 @@ import sharp from 'sharp';
 import { serverError } from '../utils/helpers/server-error';
 import { optimizeFilename } from '../utils/helpers/string.functions';
 import {
-	storageFolder,
 	StorageFolderArray,
 	StorageFolderType
 } from '@/src/storage/storage.types';
 
 @Injectable()
 export class StorageService {
-	constructor(private readonly configService: ConfigService<EnvConfig>) {}
 	private readonly s3 = new S3Client({
 		endpoint: this.configService.get('AWS_ENDPOINT'),
 		region: this.configService.get('AWS_REGION'),
@@ -23,6 +21,8 @@ export class StorageService {
 			secretAccessKey: this.configService.get('AWS_SECRET_ACCESS_KEY') as string
 		}
 	});
+
+	constructor(private readonly configService: ConfigService<EnvConfig>) {}
 
 	async upload({
 		file,
@@ -36,17 +36,7 @@ export class StorageService {
 		if (!StorageFolderArray.includes(folder)) {
 			throw serverError(HttpStatus.BAD_REQUEST, 'Invalid folder name');
 		}
-		const optimizedFile =
-			folder === storageFolder.ebooks || folder === storageFolder.imagesInBook
-				? file
-				: await sharp(file)
-						.resize({
-							height: 1200,
-							width: 800
-						})
-
-						.toFormat('jpeg', { progressive: true, quality: 50 })
-						.toBuffer();
+		const optimizedFile = await this.optimizeFile(file, folder);
 
 		const optimizedFileName = `${folder}/${
 			Date.now() - Math.floor(Math.random() * 1000)
@@ -72,4 +62,30 @@ export class StorageService {
 			name: optimizedFileName
 		};
 	}
+
+	private optimizeFile = async (file: Buffer, folder: string) => {
+		switch (folder) {
+			case 'booksCovers': {
+				return sharp(file)
+					.resize({
+						height: 1200,
+						width: 800
+					})
+					.toFormat('jpeg', { progressive: true, quality: 80 })
+					.toBuffer();
+			}
+			case 'authorsPictures': {
+				return sharp(file)
+					.resize({
+						height: 500,
+						width: 500
+					})
+					.toFormat('jpeg', { progressive: true, quality: 60 })
+					.toBuffer();
+			}
+			default: {
+				return file;
+			}
+		}
+	};
 }

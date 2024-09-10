@@ -2,14 +2,21 @@ import { z } from 'zod';
 import { ShortGenreSchema } from '../../genre/dto/short-genre.schema';
 import { ChapterPayloadSchema } from '../../ebook/dto/chapter.schema';
 
+export enum ageEnum {
+	all = 'all',
+	kids = 'kids',
+	teens = 'teens',
+	adults = 'adults'
+}
 export const CreateBookSchema = z.object({
 	title: z.string(),
 	slug: z.string(),
+	age: z.nativeEnum(ageEnum),
 	authorId: z.string(),
-	summary: z.string().max(1000).min(10),
-	concept: z.string().max(1000).min(10),
-	description: z.string().max(1000).min(10),
-	rating: z.number().min(1).positive(),
+	summary: z.string().min(10),
+	concept: z.string().min(10),
+	description: z.string().min(10),
+	rating: z.number().min(1).positive().max(5),
 	chapters: z.array(ChapterPayloadSchema).min(1),
 	picture: z.string(),
 	genres: z.array(ShortGenreSchema).min(1)

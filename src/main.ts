@@ -12,6 +12,7 @@ import {
 	typesGeneratorConfigAdmin,
 	typesGeneratorConfigMobile
 } from './utils/config/open-api.config';
+import { json } from 'express';
 
 async function bootstrap() {
 	const app = await NestFactory.create(AppModule);
@@ -20,6 +21,7 @@ async function bootstrap() {
 	app.enableCors({});
 	app.use(helmet());
 	app.useGlobalPipes(new ZodValidationPipe());
+	app.use(json({ limit: '50mb' }));
 
 	Sentry.init({
 		dsn: process.env.SENTRY_DSN,

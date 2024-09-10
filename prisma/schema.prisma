@@ -54,7 +54,6 @@ model Book {
   title           String           @unique
   slug            String           @unique
   age             age              @default(all)
-  gender          gender           @default(other)
   description     String
   summary         String
   concept         String
@@ -172,11 +171,6 @@ model ReadingHistory {
 enum Role {
   user
   admin
-}
-
-enum StorageFolderEnum {
-  ebooks
-  booksCovers
 }
 
 enum gender {

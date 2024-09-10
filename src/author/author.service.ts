@@ -8,8 +8,12 @@ export class AuthorService {
 
 	create(dto: Required<CreateAuthorDto>) {
 		console.log('try to create author', dto);
+		const { photo, ...rest } = dto;
 		return this.prisma.author.create({
-			data: dto
+			data: {
+				picture: photo,
+				...rest
+			}
 		});
 	}
 	update(dto: AuthorDto) {
@@ -29,33 +33,35 @@ export class AuthorService {
 			}
 		});
 	}
-	catalog(searchTerm: string, page: number) {
+
+	async catalog(searchTerm: string, page: number) {
 		console.log('try to get author catalog', searchTerm, page);
-		return this.prisma.author.findMany({
+		const perPage = 20;
+		const count = await this.prisma.author.count();
+		const authors = await this.prisma.author.findMany({
 			select: {
 				id: true,
 				name: true,
 				picture: true,
 				description: true
 			},
+			take: perPage,
+			...(page && {
+				skip: page * perPage
+			}),
 			...(searchTerm && {
 				where: {
-					OR: [
-						{
-							name: {
-								contains: searchTerm
-							}
-						},
-						{
-							description: {
-								contains: searchTerm
-							}
-						}
-					]
+					name: {
+						contains: searchTerm,
+						mode: 'insensitive'
+					}
 				}
-			}),
-			skip: (page - 1) * 10,
-			take: 10
+			})
 		});
+		return {
+			data: authors,
+			canLoadMore: page < Math.floor(count / perPage),
+			totalPages: Math.floor(count / perPage)
+		};
 	}
 }

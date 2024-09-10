@@ -15,7 +15,11 @@ import {
 	ApiTags
 } from '@nestjs/swagger';
 import { Auth } from '@/src/auth/decorators/auth.decorator';
-import { AuthorDto, CreateAuthorDto } from '@/src/author/dto/author.dto';
+import {
+	AuthorCatalogOutput,
+	AuthorDto,
+	CreateAuthorDto
+} from '@/src/author/dto/author.dto';
 
 @ApiTags('👨‍🏫 author')
 @ApiBearerAuth()
@@ -41,18 +45,18 @@ export class AuthorController {
 		return this.authorService.update(dto);
 	}
 	@Auth('admin')
-	@Delete('admin/update')
-	async delete(@Param('id') id: string) {
+	@Delete('admin/remove/:id')
+	async remove(@Param('id') id: string) {
 		return this.authorService.delete(id);
 	}
 
 	@Auth('admin')
 	@Get('/admin/catalog')
-	@ApiOkResponse({ type: [AuthorDto] })
+	@ApiOkResponse({ type: AuthorCatalogOutput })
 	async catalog(
 		@Query('searchTerm') searchTerm: string,
 		@Query('page') page: number
-	): Promise<AuthorDto[]> {
+	): Promise<AuthorCatalogOutput> {
 		return this.authorService.catalog(searchTerm, page || 1);
 	}
 }

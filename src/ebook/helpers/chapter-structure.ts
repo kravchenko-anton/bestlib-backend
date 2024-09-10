@@ -1,4 +1,3 @@
-import dayjs from 'dayjs';
 import type { ChapterType } from '@/src/ebook/dto/chapter.schema';
 
 export interface GetChapterStructureType
@@ -6,7 +5,7 @@ export interface GetChapterStructureType
 	sectionId: string;
 	id: string;
 	romanNumber: string;
-	readingTime: number;
+	readingTime: string;
 }
 export const getChapterStructure = ({
 	title,
@@ -19,9 +18,7 @@ export const getChapterStructure = ({
 	<h4 style="padding: 0; font-size: 18px; margin: 0 0 4px;">${title}</h4>
 	<div style=" gap: 10px; display: flex; align-items: center;">
 	<h6 style="margin: 0; padding: 0;">${romanNumber}</h6>
-	<em style="margin: 0; padding: 0;">${dayjs()
-		.minute(readingTime)
-		.format('HH:mm')}</em>
+	<em style="margin: 0; padding: 0;">${readingTime}</em>
 </div>
 </div>
  ${content}
