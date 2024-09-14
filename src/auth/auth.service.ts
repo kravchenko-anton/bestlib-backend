@@ -9,7 +9,7 @@ import { ReturnGenreObject } from '../genre/return.genre.object';
 import { UserService } from '../user/user.service';
 import { serverError } from '../utils/helpers/server-error';
 import { PrismaService } from '../utils/services/prisma.service';
-import type { AuthDto, GoogleAuthDto } from './dto/auth.dto';
+import type { AuthDto, GoogleAuthDto } from './auth.dto';
 
 @Injectable()
 export class AuthService {

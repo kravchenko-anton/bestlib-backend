@@ -1,9 +1,9 @@
-import type { ShortBook } from '@/src/book/dto/book.dto';
 import { returnBookObject } from '@/src/book/return.book.object';
 import { catalogSearchFields } from '@/src/catalog/catalog.fields';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Inject, Injectable } from '@nestjs/common';
 import * as cacheManagerType from 'cache-manager';
+import type { ShortBook } from 'src/book/book.dto';
 import { RecommendationService } from '../recommendation/recommendation.service';
 import { PrismaService } from '../utils/services/prisma.service';
 
@@ -25,9 +25,9 @@ export class CatalogService {
 
 	async featured(userId: string) {
 		console.log('start featured for:', userId);
-		const alreadyUsedBookSlugs: string[] = [];
+		const alreadyUsedBookId: string[] = [];
 		const pushBooks = (books: ShortBook[]) => {
-			alreadyUsedBookSlugs.push(...books.map(book => book.id));
+			alreadyUsedBookId.push(...books.map(book => book.id));
 			return books;
 		};
 		const userSelectedGenres =
@@ -51,20 +51,19 @@ export class CatalogService {
 							id: genre.id
 						}
 					},
-					slug: {
-						notIn: alreadyUsedBookSlugs
+					id: {
+						notIn: alreadyUsedBookId
 					}
 				}
 			})
 		);
 		console.log('get booksBySelectedGenres:', booksBySelectedGenres);
 		const response = {
-			picksOfWeek:
-				await this.picksOfTheWeek(alreadyUsedBookSlugs).then(pushBooks),
+			picksOfWeek: await this.picksOfTheWeek(alreadyUsedBookId).then(pushBooks),
 			genres: await this.prisma.genre.findMany({}),
 			bestSellingBooks:
-				await this.bestSellersBooks(alreadyUsedBookSlugs).then(pushBooks),
-			newReleases: await this.newReleases(alreadyUsedBookSlugs).then(pushBooks),
+				await this.bestSellersBooks(alreadyUsedBookId).then(pushBooks),
+			newReleases: await this.newReleases(alreadyUsedBookId).then(pushBooks),
 			booksBySelectedGenres: await Promise.all(booksBySelectedGenres)
 		};
 
@@ -72,7 +71,7 @@ export class CatalogService {
 		return response;
 	}
 
-	async picksOfTheWeek(skippedBookSlugs: string[] = []) {
+	async picksOfTheWeek(skippedBookById: string[] = []) {
 		console.log('start picksOfTheWeek');
 		const picksOfTheWeek: ShortBook[] | undefined =
 			await this.cacheManager.get('picksOfTheWeek');
@@ -91,8 +90,8 @@ export class CatalogService {
 			},
 			where: {
 				isPublic: true,
-				slug: {
-					notIn: skippedBookSlugs
+				id: {
+					notIn: skippedBookById
 				}
 			}
 		});
@@ -104,14 +103,14 @@ export class CatalogService {
 		return picks;
 	}
 
-	private bestSellersBooks(skippedBookSlugs: string[] = []) {
+	private bestSellersBooks(skippedBookById: string[] = []) {
 		console.log('start bestSellersBooks');
 		const books = this.prisma.book.findMany({
 			take: 10,
 			where: {
 				isPublic: true,
-				slug: {
-					notIn: skippedBookSlugs
+				id: {
+					notIn: skippedBookById
 				}
 			},
 			orderBy: {
@@ -130,7 +129,7 @@ export class CatalogService {
 		return books;
 	}
 
-	private newReleases(skippedBookSlugs: string[] = []) {
+	private newReleases(skippedBookById: string[] = []) {
 		console.log('start newReleases');
 		const books = this.prisma.book.findMany({
 			take: 10,
@@ -144,8 +143,8 @@ export class CatalogService {
 			},
 			where: {
 				isPublic: true,
-				slug: {
-					notIn: skippedBookSlugs
+				id: {
+					notIn: skippedBookById
 				}
 			},
 			orderBy: {

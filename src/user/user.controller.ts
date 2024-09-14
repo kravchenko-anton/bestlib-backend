@@ -21,7 +21,7 @@ import {
 	UserCatalogOutput,
 	UserLibraryOutput,
 	UserStatistics
-} from './dto/user.dto';
+} from './user.dto';
 import { UserService } from './user.service';
 
 @ApiBearerAuth()
@@ -75,50 +75,44 @@ export class UserController {
 	}
 
 	@Auth()
-	@Patch('/start-reading/:slug')
+	@Patch('/start-reading/:id')
 	async startReading(
 		@CurrentUser('id') userId: string,
-		@Param('slug') slug: string
+		@Param('id') id: string
 	) {
-		return this.usersService.startReading(userId, slug);
+		return this.usersService.startReading(userId, id);
 	}
 
 	@Auth()
-	@Patch('/finish-reading/:slug')
+	@Patch('/finish-reading/:id')
 	async finishReading(
 		@CurrentUser('id') userId: string,
-		@Param('slug') slug: string
+		@Param('id') id: string
 	) {
-		return this.usersService.finishReading(userId, slug);
+		return this.usersService.finishReading(userId, id);
 	}
 
 	@Auth()
-	@Patch('/remove-from-library/:slug')
+	@Patch('/remove-from-library/:id')
 	async removeFromLibrary(
 		@CurrentUser('id') userId: string,
-		@Param('slug') slug: string
+		@Param('id') id: string
 	) {
-		return this.usersService.removeFromLibrary(userId, slug);
+		return this.usersService.removeFromLibrary(userId, id);
 	}
 
 	@Auth()
-	@Patch('/toggle-save/:slug')
+	@Patch('/toggle-save/:id')
 	@ApiOkResponse({ type: Boolean })
-	async toggleSave(
-		@CurrentUser('id') userId: string,
-		@Param('slug') slug: string
-	) {
-		return this.usersService.toggleSave(userId, slug);
+	async toggleSave(@CurrentUser('id') userId: string, @Param('id') id: string) {
+		return this.usersService.toggleSave(userId, id);
 	}
 
 	@Auth()
-	@Get('/is-saved/:slug')
+	@Get('/is-saved/:id')
 	@ApiOkResponse({ type: Boolean })
-	async isSaved(
-		@CurrentUser('id') userId: string,
-		@Param('slug') slug: string
-	) {
-		return this.usersService.isSaved(userId, slug);
+	async isSaved(@CurrentUser('id') userId: string, @Param('id') id: string) {
+		return this.usersService.isSaved(userId, id);
 	}
 
 	// admin

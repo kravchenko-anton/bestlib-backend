@@ -9,7 +9,7 @@ import { serverError } from '@/src/utils/helpers/server-error';
 import { getChapterStructure } from '@/src/ebook/helpers/chapter-structure';
 import { getHtmlStructure } from '@/src/ebook/helpers/get-html-structure';
 import { ebookProcessing } from '@/src/ebook/helpers/unfold/unfold-ebook';
-import { UpdateChapterDto } from '@/src/ebook/dto/ebook.dto';
+import { UpdateChapterDto } from 'src/ebook/ebook.dto';
 
 @Injectable()
 export class EbookService {

@@ -1,7 +1,7 @@
 import {
 	CreateReaction,
 	UpdateReaction
-} from '@/src/reaction/dto/reaction.dto';
+} from 'src/reaction/reaction.dto';
 import { serverError } from '@/src/utils/helpers/server-error';
 import { PrismaService } from '@/src/utils/services/prisma.service';
 import { HttpStatus, Injectable } from '@nestjs/common';

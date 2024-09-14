@@ -1,4 +1,3 @@
-import type { ReadingHistory } from '@/src/user/dto/user.dto';
 import {
 	userCatalogFields,
 	userFinishReadingBookFields,
@@ -10,11 +9,12 @@ import {
 import { statisticReduce } from '@/src/utils/services/statisticReduce.service';
 import { HttpStatus, Injectable } from '@nestjs/common';
 import type { Prisma } from '@prisma/client';
-import { slugSelect } from '../utils/common/return.default.object';
+import dayjs from 'dayjs';
+import type { ReadingHistory } from 'src/user/user.dto';
+import { idSelect } from '../utils/common/return.default.object';
 import { serverError } from '../utils/helpers/server-error';
 import { PrismaService } from '../utils/services/prisma.service';
 import { returnUserObject } from './return.user.object';
-import dayjs from 'dayjs';
 
 @Injectable()
 export class UserService {
@@ -149,65 +149,65 @@ export class UserService {
 		});
 	}
 
-	async startReading(userId: string, slug: string) {
-		await this.checkBookExist(slug);
+	async startReading(userId: string, id: string) {
+		await this.checkBookExist(id);
 		const user = await this.getUserById(userId, {
-			readingBooks: slugSelect,
-			finishedBooks: slugSelect
+			readingBooks: idSelect,
+			finishedBooks: idSelect
 		});
 
-		const isReadingExist = user.readingBooks.some(book => book.slug === slug);
+		const isReadingExist = user.readingBooks.some(book => book.id === id);
 		if (isReadingExist) return;
 
 		await this.prisma.user.update({
 			where: { id: user.id },
-			data: userStartReadingBookFields(slug)
+			data: userStartReadingBookFields(id)
 		});
 	}
-	async removeFromLibrary(userId: string, slug: string) {
-		await this.checkBookExist(slug);
+	async removeFromLibrary(userId: string, id: string) {
+		await this.checkBookExist(id);
 		const user = await this.getUserById(userId, {
-			readingBooks: slugSelect,
-			finishedBooks: slugSelect,
-			savedBooks: slugSelect
+			readingBooks: idSelect,
+			finishedBooks: idSelect,
+			savedBooks: idSelect
 		});
 
 		await this.prisma.user.update({
 			where: { id: user.id },
-			data: userRemoveFromLibraryFields(slug)
+			data: userRemoveFromLibraryFields(id)
 		});
 	}
 
-	async finishReading(userId: string, slug: string) {
-		await this.checkBookExist(slug);
+	async finishReading(userId: string, id: string) {
+		await this.checkBookExist(id);
 		const user = await this.getUserById(userId, {
-			readingBooks: slugSelect
+			readingBooks: idSelect
 		});
-		const isReadingExist = user.readingBooks.some(book => book.slug === slug);
+		const isReadingExist = user.readingBooks.some(book => book.id === id);
 		if (!isReadingExist) return;
 
 		await this.prisma.user.update({
 			where: { id: user.id },
-			data: userFinishReadingBookFields(slug)
+			data: userFinishReadingBookFields(id)
 		});
 	}
 
-	async toggleSave(userId: string, slug: string) {
-		await this.checkBookExist(slug);
+	async toggleSave(userId: string, id: string) {
+		await this.checkBookExist(id);
 		const user = await this.prisma.user.findUnique({
 			where: { id: userId },
 			select: {
 				id: true,
-				savedBooks: slugSelect
+				savedBooks: idSelect
 			}
 		});
 		if (!user) throw serverError(HttpStatus.BAD_REQUEST, "User doesn't exist");
-		const isSavedExist = user.savedBooks.some(book => book.slug === slug);
+		const isSavedExist = user.savedBooks.some(book => book.id === id);
 
 		await this.prisma.user.update({
 			where: { id: user.id },
 			data: userToggleSaveFields({
-				slug,
+				id,
 				isSavedExist
 			})
 		});
@@ -215,23 +215,23 @@ export class UserService {
 		return !isSavedExist;
 	}
 
-	public async isSaved(userId: string, slug: string) {
-		await this.checkBookExist(slug);
+	public async isSaved(userId: string, id: string) {
+		await this.checkBookExist(id);
 		const user = await this.prisma.user.findUnique({
 			where: { id: userId },
 			select: {
 				id: true,
-				savedBooks: slugSelect
+				savedBooks: idSelect
 			}
 		});
 		if (!user)
 			throw serverError(HttpStatus.BAD_REQUEST, "Something's wrong, try again");
-		return user.savedBooks.some(book => book.slug === slug);
+		return user.savedBooks.some(book => book.id === id);
 	}
 
-	private async checkBookExist(slug: string) {
+	private async checkBookExist(id: string) {
 		const book = await this.prisma.book.findUnique({
-			where: { slug, isPublic: true },
+			where: { id, isPublic: true },
 			select: {
 				id: true,
 				title: true

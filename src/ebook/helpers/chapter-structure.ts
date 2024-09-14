@@ -1,4 +1,4 @@
-import type { ChapterType } from '@/src/ebook/dto/chapter.schema';
+import type { ChapterType } from 'src/utils/validation/ebook/chapter.schema';
 
 export interface GetChapterStructureType
 	extends Pick<ChapterType, 'title' | 'content'> {

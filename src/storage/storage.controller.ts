@@ -17,7 +17,7 @@ import {
 	ApiTags
 } from '@nestjs/swagger';
 import { Auth } from '../auth/decorators/auth.decorator';
-import { UploadOutputDto } from './dto/storage.dto';
+import { UploadOutputDto } from './storage.dto';
 import { StorageService } from './storage.service';
 import {
 	StorageFolderArray,

@@ -102,85 +102,85 @@ export const userCatalogFields = ({
 		})
 	}) as const;
 
-export const userFinishReadingBookFields = (slug: string) =>
+export const userFinishReadingBookFields = (id: string) =>
 	Prisma.validator<Prisma.UserUpdateInput>()({
 		readingBooks: {
 			disconnect: {
-				slug
+				id
 			}
 		},
 		savedBooks: {
 			disconnect: {
-				slug
+				id
 			}
 		},
 		finishedBooks: {
 			connect: {
-				slug
+				id
 			}
 		}
 	});
 
-export const userRemoveFromLibraryFields = (slug: string) =>
+export const userRemoveFromLibraryFields = (id: string) =>
 	Prisma.validator<Prisma.UserUpdateInput>()({
 		readingBooks: {
 			disconnect: {
-				slug
+				id
 			}
 		},
 		savedBooks: {
 			disconnect: {
-				slug
+				id
 			}
 		},
 		finishedBooks: {
 			disconnect: {
-				slug
+				id
 			}
 		}
 	});
 
-export const userStartReadingBookFields = (slug: string) =>
+export const userStartReadingBookFields = (id: string) =>
 	Prisma.validator<Prisma.UserUpdateInput>()({
 		readingBooks: {
 			connect: {
-				slug
+				id
 			}
 		},
 		savedBooks: {
 			disconnect: {
-				slug
+				id
 			}
 		},
 		finishedBooks: {
 			disconnect: {
-				slug
+				id
 			}
 		}
 	});
 
 export const userToggleSaveFields = ({
 	isSavedExist,
-	slug
+	id
 }: {
 	isSavedExist: boolean;
-	slug: string;
+	id: string;
 }) =>
 	Prisma.validator<Prisma.UserUpdateInput>()({
 		savedBooks: {
 			[isSavedExist ? 'disconnect' : 'connect']: {
-				slug
+				id
 			}
 		},
 		...(!isSavedExist && {
 			readingBooks: {
 				disconnect: {
-					slug
+					id
 				}
 			},
 			finishedBooks: {
 				disconnect: {
-					slug
+					id
 				}
 			}
 		})

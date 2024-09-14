@@ -1,28 +1,46 @@
-import { HttpStatus, Injectable } from '@nestjs/common';
-import { serverError } from '../utils/helpers/server-error';
-import { PrismaService } from '../utils/services/prisma.service';
-import type { Book, CreateBookDto, UpdateBookDto } from './dto/book.dto';
-import type { UpdateBookDtoExtended } from './book.types';
-
-import {
-	bookCatalogFields,
-	infoByIdAdminFields,
-	infoBySlug
-} from '@/src/book/book.fields';
 import { returnBookObject } from '@/src/book/return.book.object';
-import { statisticReduce } from '@/src/utils/services/statisticReduce.service';
+import { ReturnGenreObject } from '@/src/genre/return.genre.object';
 import { checkHtmlValid } from '@/src/utils/common/html-validation';
 import { slugify } from '@/src/utils/helpers/slugify';
+import { statisticReduce } from '@/src/utils/services/statisticReduce.service';
+import { HttpStatus, Injectable } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
+import { serverError } from '../utils/helpers/server-error';
+import { PrismaService } from '../utils/services/prisma.service';
+import {
+	type Book,
+	type CreateBookDto,
+	CreateImpressionDto,
+	type UpdateBookDto
+} from './book.dto';
+import type { UpdateBookDtoExtended } from './book.types';
 
 @Injectable()
 export class BookService {
 	constructor(private readonly prisma: PrismaService) {}
 
-	async infoById(slug: string) {
-		console.log('try to get book by slug', slug);
+	async infoById(id: string) {
+		console.log('try to get book by id', id);
 		const book = await this.prisma.book.findUnique({
-			where: { slug, isPublic: true },
-			select: infoBySlug
+			where: { id, isPublic: true },
+			select: {
+				title: true,
+				isPublic: true,
+				id: true,
+				picture: true,
+				author: {
+					select: {
+						id: true,
+						name: true,
+						picture: true
+					}
+				},
+
+				description: true,
+				mainGenre: false,
+				rating: true,
+				genres: { select: ReturnGenreObject }
+			}
 		});
 
 		if (!book)
@@ -46,7 +64,48 @@ export class BookService {
 	async infoByIdAdmin(id: string) {
 		const book = await this.prisma.book.findUnique({
 			where: { id },
-			select: infoByIdAdminFields(id)
+			select: {
+				id: true,
+				title: true,
+				picture: true,
+				isRecommendable: true,
+				authorId: true,
+				author: true,
+				slug: true,
+				createdAt: true,
+				updatedAt: true,
+				rating: true,
+				genres: {
+					select: ReturnGenreObject
+				},
+				concept: true,
+				summary: true,
+				description: true,
+				isPublic: true,
+				_count: {
+					select: {
+						finishedBy: true,
+						readingBy: true,
+						savedBy: true
+					}
+				},
+
+				readingHistory: {
+					where: {
+						bookId: id
+					},
+					orderBy: {
+						endDate: 'asc'
+					},
+					select: {
+						endDate: true,
+						progressDelta: true,
+						readingTimeMs: true,
+						scrollPosition: true,
+						startDate: true
+					}
+				}
+			}
 		});
 		if (!book)
 			throw serverError(HttpStatus.BAD_REQUEST, "Something's wrong, try again");
@@ -69,9 +128,41 @@ export class BookService {
 		const perPage = 20;
 		const count = await this.prisma.book.count();
 		return {
-			data: await this.prisma.book.findMany(
-				bookCatalogFields({ page, perPage, searchTerm })
-			),
+			data: await this.prisma.book.findMany({
+				take: perPage,
+				select: Prisma.validator<Prisma.BookSelect>()({
+					author: true,
+					title: true,
+					picture: true,
+					id: true,
+					genres: { select: ReturnGenreObject },
+					rating: true,
+					isPublic: true,
+					description: true,
+					mainGenre: {
+						select: ReturnGenreObject
+					}
+				}),
+				orderBy: {
+					isPublic: 'asc'
+				},
+				...(page && {
+					skip: page * perPage
+				}),
+				...(searchTerm && {
+					where: {
+						title: {
+							contains: searchTerm,
+							mode: 'insensitive'
+						}
+					},
+					...(searchTerm && {
+						where: {
+							id: searchTerm
+						}
+					})
+				})
+			}),
 			canLoadMore: page < Math.floor(count / perPage),
 			totalPages: Math.floor(count / perPage)
 		};
@@ -125,15 +216,26 @@ export class BookService {
 		console.log('chapters created success');
 	}
 
-	async remove(slug: string) {
+	async remove(id: string) {
 		//TODO: сделать так, чтобы при удалении книги удалялись все статистики по ней
-		console.log('try to delete book', slug);
-		await this.prisma.book.delete({ where: { slug } });
+		console.log('try to delete book', id);
+		await this.prisma.book.delete({ where: { id } });
 	}
 
+	async review(id: string, dto: CreateImpressionDto) {
+		await prisma.impression.create({
+			data: {
+				userId: id,
+				bookId: dto.bookId,
+				rating: dto.rating,
+				text: dto.text,
+				tags: dto.tags
+			}
+		});
+	}
 	//TODO: переделать обновление  с такого на более лучшее
 	async update(id: string, dto: UpdateBookDto) {
-		const { genres, title, authorId, ...rest } = dto;
+		const { genres, authorId, ...rest } = dto;
 		let updateData: UpdateBookDtoExtended = {
 			...rest
 		};
@@ -150,12 +252,6 @@ export class BookService {
 						id: mainGenreId
 					}
 				}
-			};
-		}
-		if (title) {
-			updateData = {
-				...updateData,
-				slug: slugify(title)
 			};
 		}
 		if (authorId) {

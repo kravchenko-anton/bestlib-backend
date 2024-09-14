@@ -1,6 +1,6 @@
 import { Body, Controller, Post } from '@nestjs/common';
 import { ApiBody, ApiOkResponse, ApiTags } from '@nestjs/swagger';
-import { AuthDto, AuthOutput, GoogleAuthDto, RefreshDto } from './dto/auth.dto';
+import { AuthDto, AuthOutput, GoogleAuthDto, RefreshDto } from './auth.dto';
 import { AuthService } from './auth.service';
 
 @ApiTags('🔐 auth')

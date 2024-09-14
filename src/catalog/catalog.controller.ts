@@ -2,8 +2,8 @@ import { Controller, Get, Param } from '@nestjs/common';
 import { ApiBearerAuth, ApiOkResponse, ApiTags } from '@nestjs/swagger';
 import { Auth } from '../auth/decorators/auth.decorator';
 import { CurrentUser } from '../auth/decorators/user.decorator';
-import { ShortBook } from '../book/dto/book.dto';
-import { FeaturedOutput } from './dto/catalog.dto';
+import { ShortBook } from '../book/book.dto';
+import { FeaturedOutput } from './catalog.dto';
 
 import { CatalogService } from './catalog.service';
 

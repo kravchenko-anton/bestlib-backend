@@ -1,5 +1,5 @@
 import { PickType } from '@nestjs/swagger';
-import { UpdateBookDto } from './dto/book.dto';
+import { UpdateBookDto } from './book.dto';
 
 export class UpdateBookDtoExtended extends PickType(UpdateBookDto, [
 	'title',

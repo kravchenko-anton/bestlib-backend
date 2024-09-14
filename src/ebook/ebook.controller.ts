@@ -16,7 +16,7 @@ import {
 	EbookOutput,
 	UnfoldOutput,
 	UpdateChapterDto
-} from './dto/ebook.dto';
+} from './ebook.dto';
 import { EbookService } from './ebook.service';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { Auth } from '@/src/auth/decorators/auth.decorator';

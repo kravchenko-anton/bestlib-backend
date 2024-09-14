@@ -1,6 +1,6 @@
 import { HttpStatus } from '@nestjs/common';
 import EPub from 'epub2';
-import type { UnfoldChapter, UnfoldOutput } from '@/src/ebook/dto/ebook.dto';
+import type { UnfoldChapter, UnfoldOutput } from 'src/ebook/ebook.dto';
 import { prettifyHtmlContent } from '@/src/ebook/helpers/unfold/html-tree-processing';
 import { serverError } from '@/src/utils/helpers/server-error';
 

@@ -7,7 +7,7 @@ import {
 } from '@nestjs/swagger';
 import { Auth } from '../auth/decorators/auth.decorator';
 import { CurrentUser } from '../auth/decorators/user.decorator';
-import { ShortGenre } from '../genre/dto/genre.dto';
+import { ShortGenre } from '../genre/genre.dto';
 import { UpdateRecommendationDto } from './recommendation.dto';
 import { RecommendationService } from './recommendation.service';
 

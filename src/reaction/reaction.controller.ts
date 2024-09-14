@@ -1,11 +1,5 @@
 import { Auth } from '@/src/auth/decorators/auth.decorator';
 import { CurrentUser } from '@/src/auth/decorators/user.decorator';
-import {
-	CreateReaction,
-	ReactionByBookOutput,
-	ReactionListOutput,
-	UpdateReaction
-} from '@/src/reaction/dto/reaction.dto';
 import { Body, Controller, Get, Param, Post, Put } from '@nestjs/common';
 import {
 	ApiBearerAuth,
@@ -13,6 +7,12 @@ import {
 	ApiOkResponse,
 	ApiTags
 } from '@nestjs/swagger';
+import {
+	CreateReaction,
+	ReactionByBookOutput,
+	ReactionListOutput,
+	UpdateReaction
+} from 'src/reaction/reaction.dto';
 import { ReactionService } from './reaction.service';
 
 @ApiBearerAuth()
@@ -36,10 +36,10 @@ export class ReactionController {
 	}
 
 	@Auth()
-	@Get('/reaction-by-bookId/:id')
+	@Get('/reaction-by-bookId/:bookId')
 	@ApiOkResponse({ type: ReactionByBookOutput, isArray: true })
 	reactionByBook(
-		@Param('bookSlug') id: string,
+		@Param('bookId') id: string,
 		@CurrentUser('id') userId: string
 	): Promise<ReactionByBookOutput[]> {
 		return this.reactionService.reactionByBook(id, userId);

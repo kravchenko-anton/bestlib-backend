@@ -1,5 +1,5 @@
-export const slugSelect = {
+export const idSelect = {
 	select: {
-		slug: true
+		id: true
 	}
-}
+};

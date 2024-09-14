@@ -19,7 +19,7 @@ import {
 	AuthorCatalogOutput,
 	AuthorDto,
 	CreateAuthorDto
-} from '@/src/author/dto/author.dto';
+} from 'src/author/author.dto';
 
 @ApiTags('👨‍🏫 author')
 @ApiBearerAuth()

@@ -21,6 +21,19 @@ model Genre {
   @@index([id], name: "genre_index")
 }
 
+model Impression {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  text      String
+  rating    Float    @default(0)
+  tags      String[]
+  bookId    String
+  userId    String
+  book      Book     @relation(fields: [bookId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
+}
+
 model Author {
   id          String   @id @default(uuid())
   createdAt   DateTime @default(now())
@@ -69,6 +82,7 @@ model Book {
   readingBy       User[]           @relation("ReadingBooks")
   chapters        Chapter[]
   readingHistory  ReadingHistory[]
+  impressions     Impression[]
   reactions       Reaction[]
   bookSeries      BookSeries?      @relation(fields: [bookSeriesId], references: [id])
   Collections     Collection[]
@@ -144,6 +158,7 @@ model User {
   finishedBooks  Book[]           @relation("FinishedBooks")
   readingBooks   Book[]           @relation("ReadingBooks")
   readingHistory ReadingHistory[]
+  impressions    Impression[]
 
   @@index([id], name: "user_id_index")
 }
