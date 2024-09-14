@@ -18,15 +18,21 @@ import { Auth } from '@/src/auth/decorators/auth.decorator';
 import {
 	AuthorCatalogOutput,
 	AuthorDto,
-	CreateAuthorDto
-} from 'src/author/author.dto';
+	CreateAuthorDto, ShortAuthorDto
+} from 'src/author/author.dto'
 
 @ApiTags('👨‍🏫 author')
 @ApiBearerAuth()
 @Controller('author')
 export class AuthorController {
 	constructor(private readonly authorService: AuthorService) {}
-
+	
+	@Get('by-id/:id')
+	@ApiOkResponse({ type: AuthorDto })
+	async byId(@Param("id") id: string): Promise<AuthorDto> {
+		return this.authorService.byId(id);
+	}
+	
 	@Auth('admin')
 	@Post('admin/create')
 	@ApiBody({
@@ -39,9 +45,9 @@ export class AuthorController {
 	@Auth('admin')
 	@Post('admin/update')
 	@ApiBody({
-		type: AuthorDto
+		type: ShortAuthorDto
 	})
-	async update(@Body() dto: AuthorDto) {
+	async update(@Body() dto: ShortAuthorDto) {
 		return this.authorService.update(dto);
 	}
 	@Auth('admin')

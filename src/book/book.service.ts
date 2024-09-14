@@ -20,12 +20,13 @@ export class BookService {
 	constructor(private readonly prisma: PrismaService) {}
 
 	async infoById(id: string) {
-		console.log('try to get book by id', id);
 		const book = await this.prisma.book.findUnique({
 			where: { id, isPublic: true },
 			select: {
 				title: true,
 				isPublic: true,
+				summary: true,
+				concept: true,
 				id: true,
 				picture: true,
 				author: {
@@ -35,7 +36,6 @@ export class BookService {
 						picture: true
 					}
 				},
-
 				description: true,
 				mainGenre: false,
 				rating: true,
@@ -130,8 +130,10 @@ export class BookService {
 		return {
 			data: await this.prisma.book.findMany({
 				take: perPage,
-				select: Prisma.validator<Prisma.BookSelect>()({
+				select: {
 					author: true,
+					summary: true,
+					concept: true,
 					title: true,
 					picture: true,
 					id: true,
@@ -142,7 +144,7 @@ export class BookService {
 					mainGenre: {
 						select: ReturnGenreObject
 					}
-				}),
+				},
 				orderBy: {
 					isPublic: 'asc'
 				},
@@ -223,7 +225,7 @@ export class BookService {
 	}
 
 	async review(id: string, dto: CreateImpressionDto) {
-		await prisma.impression.create({
+		await this.prisma.impression.create({
 			data: {
 				userId: id,
 				bookId: dto.bookId,

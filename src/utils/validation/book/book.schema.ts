@@ -6,10 +6,12 @@ export const ShortBookSchema = z.object({
 	id: z.string(),
 	title: z.string(),
 	picture: z.string(),
-	author: z.object({
-		id: z.string(),
-		name: z.string()
-	}),
+	author: z
+		.object({
+			id: z.string(),
+			name: z.string()
+		})
+		.required(),
 	rating: z.number()
 });
 export const BookSchema = z
@@ -41,7 +43,6 @@ export const FullBookSchema = BookSchema.merge(
 				z.object({
 					endDate: z.date(),
 					progressDelta: z.number(),
-					pagesRead: z.number(),
 					readingTimeMs: z.number()
 				})
 			)

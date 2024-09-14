@@ -24,6 +24,8 @@ export class EbookService {
 			}
 		});
 		console.log('chapter:', chapter, chapterId);
+		if  (!chapter)
+			throw serverError(HttpStatus.BAD_REQUEST, 'Chapter not found');
 		await this.prisma.chapter.update({
 			where: { id: chapterId, bookId: chapter.bookId },
 			data: dto

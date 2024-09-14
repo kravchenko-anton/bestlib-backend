@@ -49,7 +49,7 @@ export const ebookProcessing = async (buffer: Buffer) =>
 					finalAnswer.chapters = validChapters.map((chapter, index) => ({
 						id: String(index + 1),
 						title: chapter?.title || '',
-						content: chapter?.content
+						content: chapter?.content || ''
 					}));
 					resolve({
 						chapters: finalAnswer.chapters
@@ -60,4 +60,4 @@ export const ebookProcessing = async (buffer: Buffer) =>
 				);
 		});
 		epub.parse();
-	});
+	}) as Promise<UnfoldOutput>;

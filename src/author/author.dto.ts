@@ -8,4 +8,5 @@ extendZodWithOpenApi(z);
 
 export class CreateAuthorDto extends createZodDto(CreateAuthorSchema) {}
 export class AuthorDto extends createZodDto(AuthorSchema) {}
+export class ShortAuthorDto extends createZodDto(AuthorSchema.omit({ books: true })) {}
 export class AuthorCatalogOutput extends createZodDto(CatalogOutputSchema) {}

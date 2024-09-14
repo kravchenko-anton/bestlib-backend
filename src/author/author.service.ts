@@ -1,11 +1,37 @@
-import { Injectable } from '@nestjs/common';
-import { PrismaService } from '@/src/utils/services/prisma.service';
-import { AuthorDto, CreateAuthorDto } from 'src/author/author.dto';
+import { serverError } from '@/src/utils/helpers/server-error'
+import { PrismaService } from '@/src/utils/services/prisma.service'
+import { HttpStatus, Injectable } from '@nestjs/common'
+import { AuthorDto, CreateAuthorDto, ShortAuthorDto } from 'src/author/author.dto'
 
 @Injectable()
 export class AuthorService {
 	constructor(private readonly prisma: PrismaService) {}
-
+	
+	async byId(id: string) {
+		console.log('try to get author by id', id);
+		const author =  await this.prisma.author.findUnique({
+				where: {
+					id
+				},
+				select: {
+					id: true,
+					name: true,
+					picture: true,
+					description: true,
+					books: {
+						select: {
+							id: true,
+							title: true,
+							picture: true,
+							rating: true
+						}
+					}
+				}
+		})
+		if (!author) throw serverError(HttpStatus.BAD_REQUEST,'Author not found');
+		return author
+	}
+	
 	create(dto: Required<CreateAuthorDto>) {
 		console.log('try to create author', dto);
 		const { photo, ...rest } = dto;
@@ -16,7 +42,7 @@ export class AuthorService {
 			}
 		});
 	}
-	update(dto: AuthorDto) {
+	update(dto: ShortAuthorDto) {
 		console.log('try to update author', dto);
 		return this.prisma.author.update({
 			where: {
@@ -43,7 +69,15 @@ export class AuthorService {
 				id: true,
 				name: true,
 				picture: true,
-				description: true
+				description: true,
+				books: {
+					select: {
+						id: true,
+						title: true,
+						picture: true,
+						rating: true
+					}
+				}
 			},
 			take: perPage,
 			...(page && {
