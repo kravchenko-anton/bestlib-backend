@@ -6,7 +6,9 @@ export const ChapterSchema = z.object({
 	}),
 	content: z.string(),
 	position: z.number(),
-	id: z.string()
+	id: z.string(),
+	wordCount: z.number().positive().min(5),
+	symbolCount: z.number().positive().min(5)
 });
 
 export const UpdateChapterSchema = z.object({
@@ -17,12 +19,17 @@ export const UpdateChapterSchema = z.object({
 		})
 		.optional(),
 	content: z.string().optional(),
-	position: z.number().optional()
+	position: z.number().optional(),
+	wordCount: z.number().positive().min(5).optional(),
+	symbolCount: z.number().positive().min(5).optional()
 });
 
 export const ChapterPayloadSchema = ChapterSchema.omit({ id: true });
-
-export const UnfoldChapterSchema = ChapterSchema.omit({ position: true });
+export const UnfoldChapterSchema = ChapterSchema.omit({
+	position: true,
+	symbolCount: true,
+	wordCount: true
+});
 export const OutputChapterSchema = z.object({
 	title: z.string(),
 	link: z.string()

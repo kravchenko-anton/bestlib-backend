@@ -12,10 +12,9 @@ export class AppLoggerMiddleware implements NestMiddleware {
 			const { statusCode } = response;
 			const diff = process.hrtime(startAt);
 			const responseTime = diff[0] * 1e3 + diff[1] * 1e-6;
+			const seconds = responseTime / 1000;
 			this.logger.log(
-				`${method} ${originalUrl.replace('/api', '')} ${statusCode} ${responseTime.toFixed(
-					2
-				)}s`
+				`${method} ${originalUrl.replace('/api', '')} ${statusCode} ${seconds}s`
 			);
 		});
 

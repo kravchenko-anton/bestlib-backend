@@ -86,7 +86,8 @@ export class AuthService {
 
 		const user = await this.prisma.user.findUnique({
 			where: {
-				socialId: data?.sub
+				socialId: data?.sub,
+				authType: 'google'
 			}
 		});
 		if (user) {
@@ -116,6 +117,7 @@ export class AuthService {
 			data: {
 				email: data.email,
 				socialId: data.sub,
+				authType: 'google',
 				goalMinutes: 10,
 				selectedGenres: {
 					connect: popularGenres.map(genre => ({
@@ -176,7 +178,8 @@ export class AuthService {
 	async validateUser(dto: AuthDto) {
 		const user = await this.prisma.user.findUnique({
 			where: {
-				email: dto.email
+				email: dto.email,
+				authType: 'email'
 			},
 			select: {
 				password: true,

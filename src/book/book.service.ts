@@ -1,10 +1,8 @@
 import { returnBookObject } from '@/src/book/return.book.object';
 import { ReturnGenreObject } from '@/src/genre/return.genre.object';
 import { checkHtmlValid } from '@/src/utils/common/html-validation';
-import { slugify } from '@/src/utils/helpers/slugify';
 import { statisticReduce } from '@/src/utils/services/statisticReduce.service';
 import { HttpStatus, Injectable } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
 import { serverError } from '../utils/helpers/server-error';
 import { PrismaService } from '../utils/services/prisma.service';
 import {
@@ -71,7 +69,6 @@ export class BookService {
 				isRecommendable: true,
 				authorId: true,
 				author: true,
-				slug: true,
 				createdAt: true,
 				updatedAt: true,
 				rating: true,
@@ -185,7 +182,6 @@ export class BookService {
 			data: {
 				summary: dto.summary,
 				concept: dto.concept,
-				slug: dto.slug || slugify(dto.title),
 				title: dto.title,
 				picture: dto.picture,
 				rating: dto.rating,
@@ -238,9 +234,7 @@ export class BookService {
 	//TODO: переделать обновление  с такого на более лучшее
 	async update(id: string, dto: UpdateBookDto) {
 		const { genres, authorId, ...rest } = dto;
-		let updateData: UpdateBookDtoExtended = {
-			...rest
-		};
+		let updateData: UpdateBookDtoExtended = rest;
 
 		if (genres) {
 			const { genreIds, mainGenreId } = await this.getGenres(genres);

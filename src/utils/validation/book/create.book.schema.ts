@@ -10,7 +10,6 @@ export enum ageEnum {
 }
 export const CreateBookSchema = z.object({
 	title: z.string(),
-	slug: z.string(),
 	age: z.nativeEnum(ageEnum),
 	authorId: z.string(),
 	summary: z.string().min(10),

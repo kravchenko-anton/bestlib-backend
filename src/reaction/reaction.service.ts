@@ -1,10 +1,7 @@
-import {
-	CreateReaction,
-	UpdateReaction
-} from 'src/reaction/reaction.dto';
 import { serverError } from '@/src/utils/helpers/server-error';
 import { PrismaService } from '@/src/utils/services/prisma.service';
 import { HttpStatus, Injectable } from '@nestjs/common';
+import { CreateReaction, UpdateReaction } from 'src/reaction/reaction.dto';
 
 @Injectable()
 export class ReactionService {
@@ -104,20 +101,20 @@ export class ReactionService {
 		const booIds = reactionsCount.map(reaction => reaction.bookId);
 		const books = await this.prisma.book.findMany({
 			where: {
-				slug: {
+				id: {
 					in: booIds
 				},
 				isPublic: true
 			},
 			select: {
 				picture: true,
+				id: true,
 				title: true,
-				slug: true,
 				author: true
 			}
 		});
 		return reactionsCount.map(reaction => {
-			const book = books.find(book => book.slug === reaction.bookId);
+			const book = books.find(book => book.id === reaction.bookId);
 			if (!book) return null;
 			return {
 				...book,

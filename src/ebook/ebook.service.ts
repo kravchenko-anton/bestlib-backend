@@ -1,14 +1,14 @@
-import { HttpStatus, Injectable } from '@nestjs/common';
-
-import { JSDOM } from 'jsdom';
-import { slugify } from '@/src/utils/helpers/slugify';
-import { convertToRoman } from '@/src/book/helpers/romanize-number';
 import { calculateReadingTime } from '@/src/book/helpers/calculateReadingTime';
-import { PrismaService } from '@/src/utils/services/prisma.service';
-import { serverError } from '@/src/utils/helpers/server-error';
+import { convertToRoman } from '@/src/book/helpers/romanize-number';
 import { getChapterStructure } from '@/src/ebook/helpers/chapter-structure';
 import { getHtmlStructure } from '@/src/ebook/helpers/get-html-structure';
 import { ebookProcessing } from '@/src/ebook/helpers/unfold/unfold-ebook';
+import { serverError } from '@/src/utils/helpers/server-error';
+import { slugify } from '@/src/utils/helpers/slugify';
+import { PrismaService } from '@/src/utils/services/prisma.service';
+import { HttpStatus, Injectable } from '@nestjs/common';
+
+import { JSDOM } from 'jsdom';
 import { UpdateChapterDto } from 'src/ebook/ebook.dto';
 
 @Injectable()
@@ -24,7 +24,7 @@ export class EbookService {
 			}
 		});
 		console.log('chapter:', chapter, chapterId);
-		if  (!chapter)
+		if (!chapter)
 			throw serverError(HttpStatus.BAD_REQUEST, 'Chapter not found');
 		await this.prisma.chapter.update({
 			where: { id: chapterId, bookId: chapter.bookId },
@@ -38,7 +38,9 @@ export class EbookService {
 				id: true,
 				title: true,
 				position: true,
-				content: true
+				content: true,
+				wordCount: true,
+				symbolCount: true
 			},
 			orderBy: {
 				position: 'asc'

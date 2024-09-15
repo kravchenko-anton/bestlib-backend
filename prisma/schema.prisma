@@ -66,7 +66,6 @@ model Book {
   createdAt       DateTime         @default(now())
   updatedAt       DateTime         @updatedAt
   title           String           @unique
-  slug            String           @unique
   age             age              @default(all)
   description     String
   summary         String
