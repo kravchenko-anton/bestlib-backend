@@ -60,7 +60,8 @@ export class EbookService {
 						title: true,
 						position: true,
 						content: true,
-						id: true
+						id: true,
+						wordCount: true
 					},
 					orderBy: {
 						position: 'asc'
@@ -72,15 +73,16 @@ export class EbookService {
 		if (!book)
 			throw serverError(HttpStatus.BAD_REQUEST, "Something's wrong, try again");
 		console.log('get ebookById:', book.title);
-		const ebook = book.chapters.map(({ content, position, title, id }) =>
-			getChapterStructure({
-				title,
-				id,
-				sectionId: `${slugify(title)}_${id}`,
-				content,
-				readingTime: calculateReadingTime(content),
-				romanNumber: convertToRoman(position)
-			})
+		const ebook = book.chapters.map(
+			({ content, position, title, id, wordCount }) =>
+				getChapterStructure({
+					title,
+					id,
+					sectionId: `${slugify(title)}_${id}`,
+					content,
+					readingTimeMin: calculateReadingTime(wordCount),
+					romanNumber: convertToRoman(position)
+				})
 		);
 
 		const dom = new JSDOM(ebook.join(''));

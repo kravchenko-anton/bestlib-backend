@@ -1,3 +1,7 @@
+import {
+	calculateReadingTime,
+	minutesToTime
+} from '@/src/book/helpers/calculateReadingTime';
 import { returnBookObject } from '@/src/book/return.book.object';
 import { ReturnGenreObject } from '@/src/genre/return.genre.object';
 import { checkHtmlValid } from '@/src/utils/common/html-validation';
@@ -18,6 +22,14 @@ export class BookService {
 	constructor(private readonly prisma: PrismaService) {}
 
 	async infoById(id: string) {
+		const wordCount = await this.prisma.chapter.aggregate({
+			where: {
+				bookId: id
+			},
+			_sum: {
+				wordCount: true
+			}
+		});
 		const book = await this.prisma.book.findUnique({
 			where: { id, isPublic: true },
 			select: {
@@ -46,6 +58,9 @@ export class BookService {
 		console.log('book was found', book);
 		return {
 			...book,
+			readingTime: minutesToTime(
+				calculateReadingTime(Number(wordCount._sum?.wordCount)) || 0
+			),
 			fromSameAuthor: await this.prisma.book.findMany({
 				where: {
 					isPublic: true,

@@ -206,16 +206,19 @@ export class AuthService {
 	}
 
 	async checkEmailExist(email: string) {
+		console.log('Checking email exist', email);
 		const user = await this.prisma.user.findUnique({
 			where: {
 				email
 			}
 		});
-		if (user)
+		if (user) {
+			console.log('User with this email already exist', email);
 			throw serverError(
 				HttpStatus.BAD_REQUEST,
 				'User with this email already exist'
 			);
+		}
 	}
 
 	userFields(user: Pick<User, 'id' | 'email' | 'role'>) {

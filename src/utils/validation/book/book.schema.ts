@@ -58,6 +58,7 @@ export const CatalogOutputSchema = z
 
 export const infoByIdSchema = BookSchema.merge(
 	z.object({
+		readingTime: z.string(),
 		fromSameAuthor: z.array(ShortBookSchema)
 	})
 );

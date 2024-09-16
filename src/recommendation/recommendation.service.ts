@@ -1,4 +1,3 @@
-import { ReturnGenreObject } from '@/src/genre/return.genre.object';
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { serverError } from '../utils/helpers/server-error';
 import { PrismaService } from '../utils/services/prisma.service';
@@ -14,9 +13,7 @@ export class RecommendationService {
 				id: userId
 			},
 			select: {
-				selectedGenres: {
-					select: ReturnGenreObject
-				}
+				selectedGenres: true
 			}
 		});
 		return userSelectedGenres?.selectedGenres || [];
