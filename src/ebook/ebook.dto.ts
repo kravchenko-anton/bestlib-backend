@@ -1,16 +1,14 @@
-import { createZodDto } from '@anatine/zod-nestjs';
-import { extendZodWithOpenApi } from '@anatine/zod-openapi';
-
-import { z } from 'zod';
 import {
 	ChapterSchema,
 	UnfoldChapterSchema,
 	UpdateChapterSchema
 } from '@/src/utils/validation/ebook/chapter.schema';
-import {
-	EbookOutputSchema,
-	UnfoldOutputSchema
-} from '@/src/utils/validation/ebook/ebook.schema';
+import { EbookOutputSchema } from '@/src/utils/validation/ebook/ebook.schema';
+import { UnfoldOutputSchema } from '@/src/utils/validation/ebook/unfold.schema';
+import { createZodDto } from '@anatine/zod-nestjs';
+import { extendZodWithOpenApi } from '@anatine/zod-openapi';
+
+import { z } from 'zod';
 
 extendZodWithOpenApi(z);
 export class UnfoldChapter extends createZodDto(UnfoldChapterSchema) {}

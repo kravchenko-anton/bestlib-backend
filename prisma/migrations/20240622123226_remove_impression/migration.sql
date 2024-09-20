@@ -43,7 +43,7 @@ CREATE TABLE "Book" (
 );
 
 -- CreateTable
-CREATE TABLE "Reaction" (
+CREATE TABLE "Reading" (
     "id" TEXT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
@@ -171,7 +171,7 @@ CREATE UNIQUE INDEX "Book_slug_key" ON "Book"("slug");
 CREATE INDEX "book_slug_index" ON "Book"("slug");
 
 -- CreateIndex
-CREATE INDEX "reaction_id_index" ON "Reaction"("id");
+CREATE INDEX "reaction_id_index" ON "Reading"("id");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "BookTemplate_title_key" ON "BookTemplate"("title");
@@ -240,10 +240,10 @@ CREATE INDEX "_BookTemplateToGenre_B_index" ON "_BookTemplateToGenre"("B");
 ALTER TABLE "Book" ADD CONSTRAINT "Book_mainGenreId_fkey" FOREIGN KEY ("mainGenreId") REFERENCES "Genre"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Reaction" ADD CONSTRAINT "Reaction_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "Reading" ADD CONSTRAINT "Reaction_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Reaction" ADD CONSTRAINT "Reaction_bookSlug_fkey" FOREIGN KEY ("bookSlug") REFERENCES "Book"("slug") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "Reading" ADD CONSTRAINT "Reaction_bookSlug_fkey" FOREIGN KEY ("bookSlug") REFERENCES "Book"("slug") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "ReadingHistory" ADD CONSTRAINT "ReadingHistory_bookSlug_fkey" FOREIGN KEY ("bookSlug") REFERENCES "Book"("slug") ON DELETE RESTRICT ON UPDATE CASCADE;

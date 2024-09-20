@@ -3,6 +3,7 @@ import { convertToRoman } from '@/src/book/helpers/romanize-number';
 import { getChapterStructure } from '@/src/ebook/helpers/chapter-structure';
 import { getHtmlStructure } from '@/src/ebook/helpers/get-html-structure';
 import { ebookProcessing } from '@/src/ebook/helpers/unfold/unfold-ebook';
+import { getFileUrl } from '@/src/utils/common/get-file-url';
 import { serverError } from '@/src/utils/helpers/server-error';
 import { slugify } from '@/src/utils/helpers/slugify';
 import { PrismaService } from '@/src/utils/services/prisma.service';
@@ -92,7 +93,25 @@ export class EbookService {
 		console.log('return result', book.title);
 		return {
 			...book,
-			file: getHtmlStructure(file, book.picture, book.title),
+			functions: {
+				getFile: getHtmlStructure({
+					file,
+					picture: getFileUrl(book.picture),
+					title: book.title
+				}),
+				scrollToProgress: (progress: number) => `scrollToProgress(${progress})`,
+				scrollToChapter: (link: string) => `scrollToChapter('${link}')`,
+				removeAllTextSelection: () => `removeAllTextSelection()`,
+				injectStyle: (style: string) => `injectStyle('${style}')`,
+				wrapReactionsInMarkTag: (reactions: {
+					bookId: string;
+					type: string;
+					text: string;
+					xpath: string;
+					startOffset: number;
+					endOffset: number;
+				}) => `wrapReactionsInMarkTag(${JSON.stringify(reactions)})`
+			},
 			chapters: book.chapters.map(({ id, title }) => ({
 				title,
 				link: `${slugify(title)}_${id}`

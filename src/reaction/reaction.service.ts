@@ -62,9 +62,9 @@ export class ReactionService {
 	async reactionByBook(booId: string, userId: string) {
 		return this.prisma.reaction.findMany({
 			where: {
-				id: booId,
 				userId,
 				book: {
+					id: booId,
 					isPublic: true
 				}
 			},
