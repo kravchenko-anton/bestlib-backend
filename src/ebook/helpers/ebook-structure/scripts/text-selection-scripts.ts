@@ -38,17 +38,8 @@ export const selectMenuActions = `
 	const shareButton = document.getElementById('text-menu-share');
 	const emojiButtons = document.querySelectorAll('.select-menu-reaction-item');
 	const explainButton = document.getElementById('text-menu-explain');
-	const getSelectionOffsetRelativeToParent = () => {
-const selection = window.getSelection();
-const range = selection.getRangeAt(0);
-const clonedSelection = range.cloneContents();
-const clonedSelectionText = clonedSelection.textContent;
-const parent = range.commonAncestorContainer.parentNode;
-const text = parent.textContent;
-const startOffset = text.indexOf(clonedSelectionText);
-const endOffset = startOffset + clonedSelectionText.length;
-return { startOffset, endOffset };
-}
+	
+
 	emojiButtons.forEach((button) => {
 		button.addEventListener('click', () => {
 		const activeSelection = document.getSelection().toString();
@@ -66,13 +57,15 @@ return { startOffset, endOffset };
 		});
 	});
 	
-		translateButton.addEventListener('click', (e) => {
-	const activeSelection = document.getSelection().toString();
-	window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'translate', payload: {
-	text: activeSelection
-	} }));
+	
+	translateButton.addEventListener('click', () => {
+		const activeSelection = document.getSelection().toString();
+		window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'translate', payload: {
+				text: activeSelection
+			} }));
 		window.getSelection().removeAllRanges();
 	});
+	
 		
 		explainButton.addEventListener('click', () => {
 			const activeSelection = document.getSelection().toString();
@@ -89,7 +82,19 @@ return { startOffset, endOffset };
 			} }));
 		window.getSelection().removeAllRanges();
 	});
-`;
+	
+	const getSelectionOffsetRelativeToParent = () => {
+		const selection = window.getSelection();
+		const range = selection.getRangeAt(0);
+		const clonedSelection = range.cloneContents();
+		const clonedSelectionText = clonedSelection.textContent;
+		const parent = range.commonAncestorContainer.parentNode;
+		const text = parent.textContent;
+		const startOffset = text.indexOf(clonedSelectionText);
+		const endOffset = startOffset + clonedSelectionText.length;
+		return { startOffset, endOffset };
+	}
+	`;
 
 //language=TypeScript
 export const textSelectMenu = `
@@ -125,7 +130,6 @@ document.addEventListener('contextmenu', (e) => {
 	 } }));
 	const rect = activeSelection.getRangeAt(0).getBoundingClientRect();
 	const screenHeight = window.innerHeight;
-	const screenWidth = window.innerWidth;
 	const isOverlappingBottom = screenHeight - rect.top < 500;
 	const topPosition =  (rect.top + window.scrollY - 250)  + 'px';
 	const bottomPosition = (rect.top + window.scrollY + 60) + 'px';

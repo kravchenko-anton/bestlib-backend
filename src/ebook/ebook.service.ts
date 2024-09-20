@@ -1,9 +1,11 @@
 import { calculateReadingTime } from '@/src/book/helpers/calculateReadingTime';
 import { convertToRoman } from '@/src/book/helpers/romanize-number';
 import { getChapterStructure } from '@/src/ebook/helpers/chapter-structure';
-import { getHtmlStructure } from '@/src/ebook/helpers/get-html-structure';
+import {
+	getHtmlStructure,
+	onLoadScript
+} from '@/src/ebook/helpers/get-html-structure';
 import { ebookProcessing } from '@/src/ebook/helpers/unfold/unfold-ebook';
-import { getFileUrl } from '@/src/utils/common/get-file-url';
 import { serverError } from '@/src/utils/helpers/server-error';
 import { slugify } from '@/src/utils/helpers/slugify';
 import { PrismaService } from '@/src/utils/services/prisma.service';
@@ -56,6 +58,12 @@ export class EbookService {
 			select: {
 				id: true,
 				title: true,
+				author: {
+					select: {
+						name: true,
+						id: true
+					}
+				},
 				chapters: {
 					select: {
 						title: true,
@@ -89,28 +97,17 @@ export class EbookService {
 		const dom = new JSDOM(ebook.join(''));
 		console.log('start with jsdom');
 
-		const file = dom.window.document.documentElement.outerHTML.toString();
+		const file = dom.window.document.body.innerHTML.toString();
 		console.log('return result', book.title);
 		return {
 			...book,
-			functions: {
-				getFile: getHtmlStructure({
-					file,
-					picture: getFileUrl(book.picture),
-					title: book.title
-				}),
-				scrollToProgress: (progress: number) => `scrollToProgress(${progress})`,
-				scrollToChapter: (link: string) => `scrollToChapter('${link}')`,
-				removeAllTextSelection: () => `removeAllTextSelection()`,
-				injectStyle: (style: string) => `injectStyle('${style}')`,
-				wrapReactionsInMarkTag: (reactions: {
-					bookId: string;
-					type: string;
-					text: string;
-					xpath: string;
-					startOffset: number;
-					endOffset: number;
-				}) => `wrapReactionsInMarkTag(${JSON.stringify(reactions)})`
+			onLoadScript: onLoadScript,
+			file: getHtmlStructure(file, book.picture, book.title),
+			functionEnums: {
+				scrollToProgress: 'scrollToProgress',
+				scrollToChapter: 'scrollToChapter',
+				removeAllTextSelection: 'removeAllTextSelection',
+				wrapReactionsInMarkTag: 'wrapReactionsInMarkTag'
 			},
 			chapters: book.chapters.map(({ id, title }) => ({
 				title,

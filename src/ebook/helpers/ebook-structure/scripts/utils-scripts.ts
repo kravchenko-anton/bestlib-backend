@@ -1,12 +1,6 @@
 import { calculateProgress } from './calculate-progress';
 
 //language=TypeScript
-export const injectStyle = (style: string) => `
-	var style = document.createElement('style');
-	style.type = 'text/css';
-	style.innerHTML = \`${style}\`;
- document.head.appendChild(style);
-		`;
 
 //language=TypeScript
 export const utilsScripts = `

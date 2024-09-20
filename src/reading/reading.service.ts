@@ -9,26 +9,26 @@ import OpenAI from 'openai';
 
 @Injectable()
 export class ReadingService {
-	constructor(public configService: ConfigService<EnvConfig>) {}
-
 	private readonly openAi = new OpenAI({
 		apiKey: this.configService.get('OPENAI_API_KEY')
 	});
 	private readonly deepl = new deepl.Translator(
 		this.configService.get('DEEPL_API_KEY') as string
 	);
+
+	constructor(public configService: ConfigService<EnvConfig>) {}
+
 	async translateText(dto: TranslateText) {
 		return this.deepl.translateText(
 			dto.text,
 			null,
-			dto.targetLang as TargetLanguageCode,
-			{
-				context: dto.context
-			}
+			dto.targetLang as TargetLanguageCode
 		);
 	}
 
 	async gptExplain(dto: GptExplain) {
+		if (!dto.selectedText || !dto.bookTitle)
+			throw serverError(400, 'Problem with explanation');
 		return this.openAi.chat.completions
 			.create({
 				model: 'gpt-4o-mini',
@@ -36,16 +36,10 @@ export class ReadingService {
 					{
 						role: 'user',
 						content: `
-							Analyze the selected text from the book "${dto.bookTitle}".
-							Selected Text: "${dto.selectedText}"
-							Context: "${dto.context}"
-							Please provide:
-							1. Its significance within the context.
-							2. Its role in the narrative or character development.
-							3. The author's intended meaning.
-							4. Any subtextual meanings.
-							5. Its impact on the reader.
-							Summarize in 2-3 sentences.Without mentioning the title of the book or the character's name.
+							Book "${dto.bookTitle}" by ${dto.bookAuthor}.
+							Selected Text: ${dto.selectedText}.
+							Target Language: ${dto.targetLang}.
+							Analyze the following line with clarity and precision, focusing on its meaning, tone, and intent. Provide an interpretation that reflects the perspective of a thoughtful and refined individual. Be concise, insightful, and maintain a formal tone throughout
 							`
 					}
 				]

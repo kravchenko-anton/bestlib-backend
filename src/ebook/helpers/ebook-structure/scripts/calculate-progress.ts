@@ -20,7 +20,7 @@ export const calculateProgress = `
         });
 	
    window.ReactNativeWebView.postMessage(JSON.stringify({
-     type: "scroll",
+     type: 'scroll',
      payload: {
        scrollTop: currentScrollPosition,
        progress: (currentScrollPosition / (document.body.scrollHeight - document.body.clientHeight) * 100),
@@ -31,11 +31,11 @@ export const calculateProgress = `
        }
      }
    }));
-`
+`;
 export const scrollCalculateProgress = `
 let timerId;
 
-  
+
 window.addEventListener('scroll', function() {
  clearTimeout(timerId);
 
@@ -43,4 +43,4 @@ window.addEventListener('scroll', function() {
   ${calculateProgress}
  }, 700);
 });
-`
+`;
