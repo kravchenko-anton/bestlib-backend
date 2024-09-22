@@ -221,9 +221,7 @@ export class BookService {
 		await this.prisma.chapter.createMany({
 			data: dto.chapters.map(chapter => ({
 				bookId: book.id,
-				title: chapter.title,
-				content: chapter.content,
-				position: chapter.position
+				...chapter
 			}))
 		});
 		console.log('chapters created success');

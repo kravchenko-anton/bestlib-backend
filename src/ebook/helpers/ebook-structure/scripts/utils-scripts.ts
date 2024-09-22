@@ -1,8 +1,6 @@
 import { calculateProgress } from './calculate-progress';
 
 //language=TypeScript
-
-//language=TypeScript
 export const utilsScripts = `
 function getCharactersCountUntilNode(node, parent) {
   var walker = document.createTreeWalker(

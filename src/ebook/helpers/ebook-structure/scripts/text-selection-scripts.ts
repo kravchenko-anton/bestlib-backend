@@ -38,49 +38,59 @@ export const selectMenuActions = `
 	const shareButton = document.getElementById('text-menu-share');
 	const emojiButtons = document.querySelectorAll('.select-menu-reaction-item');
 	const explainButton = document.getElementById('text-menu-explain');
-	
+		let selectionText = ''
+		document.addEventListener('selectionchange', () => {
+			const activeSelection = window.getSelection().toString();
+			if (!activeSelection) return;
+			selectionText = activeSelection;
+		})
 
+	
 	emojiButtons.forEach((button) => {
 		button.addEventListener('click', () => {
-		const activeSelection = document.getSelection().toString();
 		const range = document.getSelection().getRangeAt(0);
 		const { startOffset, endOffset } = getSelectionOffsetRelativeToParent();
 			window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'reaction',
 			payload: {
-			text:activeSelection,
+			text:selectionText,
 			reaction: button.title,
 			range: { startOffset, endOffset,
 			xpath: getXPath(range.commonAncestorContainer.parentNode)
 			},
 			 }}));
-			window.getSelection().removeAllRanges();
+			setTimeout(() => {
+				window.getSelection().removeAllRanges();
+			}, 100);
 		});
 	});
 	
 	
 	translateButton.addEventListener('click', () => {
-		const activeSelection = document.getSelection().toString();
 		window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'translate', payload: {
-				text: activeSelection
+				text: selectionText
 			} }));
-		window.getSelection().removeAllRanges();
+		setTimeout(() => {
+			window.getSelection().removeAllRanges();
+		}, 100);
 	});
 	
 		
 		explainButton.addEventListener('click', () => {
-			const activeSelection = document.getSelection().toString();
 			window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'explain', payload: {
-			text: activeSelection
+			text: selectionText
 			} }));
-		window.getSelection().removeAllRanges();
+			setTimeout(() => {
+				window.getSelection().removeAllRanges();
+			}, 100);
 		});
 		
 	shareButton.addEventListener('click', () => {
-			const activeSelection = document.getSelection().toString();
 			window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'share', payload: {
-			text: activeSelection
+			text: selectionText
 			} }));
-		window.getSelection().removeAllRanges();
+		setTimeout(() => {
+			window.getSelection().removeAllRanges();
+		}, 100);
 	});
 	
 	const getSelectionOffsetRelativeToParent = () => {
@@ -118,7 +128,7 @@ document.addEventListener('click', (e) => {
 
 
 document.addEventListener('contextmenu', (e) => {
-	isFirstSelection = true;	
+	isFirstSelection = true;
 
 	const activeSelection = window.getSelection();
 	if (activeSelection.toString().length < 2) return;
@@ -132,12 +142,10 @@ document.addEventListener('contextmenu', (e) => {
 	const screenHeight = window.innerHeight;
 	const isOverlappingBottom = screenHeight - rect.top < 500;
 	const topPosition =  (rect.top + window.scrollY - 250)  + 'px';
-	const bottomPosition = (rect.top + window.scrollY + 60) + 'px';
+	const bottomPosition = (rect.top + window.scrollY + 100) + 'px';
 		selectMenu.style.top = isOverlappingBottom ? topPosition : bottomPosition;
 
-	setTimeout(() => {
-		selectMenu.style.opacity = '1';
-	}, 50);
+	selectMenu.style.opacity = '1';
 	selectMenu.style.pointerEvents = 'auto';
 	selectMenu.style.display = 'flex';
 	selectMenu.style.visibility = 'visible';
@@ -167,13 +175,20 @@ document.addEventListener('contextmenu', (e) => {
 
 document.addEventListener('selectionchange', () => {
 	if (!isFirstSelection) {
-		setTimeout(() => {
 		selectMenu.style.opacity = '0';
-	}, 50);
-			selectMenu.style.pointerEvents = 'none';
+		selectMenu.style.pointerEvents = 'none';
 		selectMenu.style.visibility = 'hidden';
 		selectMenu.style.display = 'none';
 	}
 	isFirstSelection = false;
+});
+
+document.addEventListener('mouseup', (e) => {
+	if (!window.getSelection().toString()) {
+		selectMenu.style.opacity = '0';
+		selectMenu.style.pointerEvents = 'none';
+		selectMenu.style.visibility = 'hidden';
+		selectMenu.style.display = 'none';
+	}
 });
 `;
