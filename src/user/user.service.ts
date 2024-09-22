@@ -1,3 +1,4 @@
+import type { ReadingHistory } from '@/src/user/user.dto';
 import {
 	userCatalogFields,
 	userFinishReadingBookFields,
@@ -9,8 +10,6 @@ import {
 import { statisticReduce } from '@/src/utils/services/statisticReduce.service';
 import { HttpStatus, Injectable } from '@nestjs/common';
 import type { Prisma } from '@prisma/client';
-import dayjs from 'dayjs';
-import type { ReadingHistory } from 'src/user/user.dto';
 import { idSelect } from '../utils/common/return.default.object';
 import { serverError } from '../utils/helpers/server-error';
 import { PrismaService } from '../utils/services/prisma.service';
@@ -32,25 +31,6 @@ export class UserService {
 			throw serverError(HttpStatus.BAD_REQUEST, 'Something went wrong');
 		}
 		return user;
-	}
-
-	async syncHistory(dto: ReadingHistory[], userId: string) {
-		if (dto.length === 0) return;
-		await this.prisma.readingHistory.createMany({
-			skipDuplicates: true,
-			data: dto.map(history => ({
-				readingTimeMs: history.readingTimeMs,
-				endDate: dayjs(history.endDate).toDate(),
-				progressDelta: history.progressDelta,
-				startProgress: history.startProgress,
-				endProgress: history.endProgress,
-				scrollPosition: history.scrollPosition,
-				startDate: dayjs(history.startDate).toDate(),
-				userId: userId,
-
-				bookId: history.bookId
-			}))
-		});
 	}
 
 	async adjustGoal(userId: string, goal: number) {
@@ -89,6 +69,36 @@ export class UserService {
 			progressByCurrentWeek: [] as any[],
 			goalMinutes: user.goalMinutes
 		};
+	}
+
+	async syncHistory(userId: string, dto: ReadingHistory[]) {
+		if (dto.length === 0) return [];
+		const user = await this.getUserById(userId, {
+			readingBooks: {
+				select: {
+					id: true
+				}
+			}
+		});
+		await this.prisma.readingHistory.createMany({
+			data: dto.map(({ id, ...history }) => ({
+				...history,
+				userId
+			}))
+		});
+		const userReadingBooks = user.readingBooks.map(book => book.id);
+		return this.prisma.readingHistory.findMany({
+			where: {
+				userId,
+				bookId: {
+					in: userReadingBooks
+				}
+			},
+			orderBy: {
+				endDate: 'desc'
+			},
+			distinct: ['bookId']
+		});
 	}
 
 	async library(userId: string) {

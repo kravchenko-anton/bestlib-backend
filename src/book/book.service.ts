@@ -240,9 +240,9 @@ export class BookService {
 			data: {
 				userId: id,
 				bookId: dto.bookId,
-				rating: dto.rating,
-				text: dto.text,
-				tags: dto.tags
+				rating: dto.rating || 0,
+				text: dto.text || '',
+				tags: dto.tags || []
 			}
 		});
 	}

@@ -1,7 +1,7 @@
-import { ShortGenreSchema } from '@/src/utils/validation/short-genre.schema';
-import { z } from 'zod';
 import { BaseCatalogSchema } from '@/src/utils/common/base.catalog.schema';
 import { ShortBookSchema } from '@/src/utils/validation/book/book.schema';
+import { ShortGenreSchema } from '@/src/utils/validation/short-genre.schema';
+import { z } from 'zod';
 
 export const UserSchema = z.object({
 	id: z.string(),
@@ -61,7 +61,7 @@ export const HistorySchema = z.object({
 	startDate: z.date(),
 	endDate: z.date(),
 	startProgress: z.number(),
-
+	id: z.string(),
 	endProgress: z.number(),
 	progressDelta: z.number(),
 	readingTimeMs: z.number(),

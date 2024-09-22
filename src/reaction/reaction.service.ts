@@ -1,12 +1,71 @@
 import { serverError } from '@/src/utils/helpers/server-error';
 import { PrismaService } from '@/src/utils/services/prisma.service';
 import { HttpStatus, Injectable } from '@nestjs/common';
-import { CreateReaction, UpdateReaction } from 'src/reaction/reaction.dto';
+import {
+	CreateReaction,
+	ReactionPayload,
+	UpdateReaction
+} from 'src/reaction/reaction.dto';
 
 @Injectable()
 export class ReactionService {
 	constructor(private readonly prisma: PrismaService) {}
+	async syncReaction(userId: string, dto: ReactionPayload) {
+		await this.prisma.$transaction(async prisma => {
+			await prisma.reaction.createMany({
+				data: dto.create.map(reaction => ({
+					userId,
+					...reaction
+				}))
+			});
 
+			for (const reaction of dto.update) {
+				await prisma.reaction.update({
+					where: {
+						id: reaction.id,
+						userId
+					},
+					data: reaction.updateObject
+				});
+			}
+
+			await prisma.reaction.deleteMany({
+				where: {
+					id: {
+						in: dto.delete
+					},
+					userId
+				}
+			});
+		});
+		return this.prisma.reaction.findMany({
+			where: {
+				userId
+			},
+			select: {
+				id: true,
+				text: true,
+				createdAt: true,
+				endOffset: true,
+				startOffset: true,
+				xpath: true,
+				type: true,
+				book: {
+					select: {
+						id: true,
+						title: true,
+						author: {
+							select: {
+								id: true,
+								name: true
+							}
+						},
+						picture: true
+					}
+				}
+			}
+		});
+	}
 	async create(userId: string, createReactionDto: CreateReaction) {
 		const reactionsInXpath = await this.prisma.reaction.findMany({
 			where: {

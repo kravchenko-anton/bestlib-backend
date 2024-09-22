@@ -11,6 +11,8 @@ import {
 	CreateReaction,
 	ReactionByBookOutput,
 	ReactionListOutput,
+	ReactionOutput,
+	ReactionPayload,
 	UpdateReaction
 } from 'src/reaction/reaction.dto';
 import { ReactionService } from './reaction.service';
@@ -26,6 +28,17 @@ export class ReactionController {
 	@ApiBody({ type: CreateReaction })
 	create(@CurrentUser('id') userId: string, @Body() dto: CreateReaction) {
 		return this.reactionService.create(userId, dto);
+	}
+
+	@Auth()
+	@Post('/sync-reaction')
+	@ApiBody({ type: ReactionPayload })
+	@ApiOkResponse({ type: [ReactionOutput] })
+	async syncReaction(
+		@CurrentUser('id') userId: string,
+		@Body() dto: ReactionPayload
+	): Promise<ReactionOutput[]> {
+		return this.reactionService.syncReaction(userId, dto);
 	}
 
 	@Auth()

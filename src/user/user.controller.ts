@@ -29,39 +29,28 @@ import { UserService } from './user.service';
 @ApiTags('👤 user')
 export class UserController {
 	constructor(private readonly usersService: UserService) {}
+	@Auth()
+	@Post('/sync-history')
+	@ApiBody({ type: [ReadingHistory] })
+	@ApiOkResponse({ type: [ReadingHistory] })
+	async syncHistory(
+		@CurrentUser('id') userId: string,
+		@Body() dto: ReadingHistory[]
+	): Promise<ReadingHistory[]> {
+		return this.usersService.syncHistory(userId, dto);
+	}
 
 	@Auth()
 	@Post('/library')
 	@ApiOkResponse({ type: UserLibraryOutput })
-	@ApiBody({ type: [ReadingHistory] })
-	async library(
-		@CurrentUser('id') userId: string,
-
-		@Body() dto: ReadingHistory[]
-	): Promise<UserLibraryOutput> {
-		await this.usersService.syncHistory(dto, userId);
+	async library(@CurrentUser('id') userId: string): Promise<UserLibraryOutput> {
 		return this.usersService.library(userId);
 	}
 
 	@Auth()
-	@Post('/sync-history')
-	@ApiBody({ type: [ReadingHistory] })
-	async syncHistory(
-		@CurrentUser('id') userId: string,
-		@Body() dto: ReadingHistory[]
-	) {
-		await this.usersService.syncHistory(dto, userId);
-	}
-
-	@Auth()
 	@Post('/statistics')
-	@ApiBody({ type: [ReadingHistory] })
 	@ApiOkResponse({ type: UserStatistics })
-	async statistics(
-		@CurrentUser('id') userId: string,
-		@Body() dto: ReadingHistory[]
-	): Promise<UserStatistics> {
-		await this.usersService.syncHistory(dto, userId);
+	async statistics(@CurrentUser('id') userId: string): Promise<UserStatistics> {
 		return this.usersService.userStatistics(userId);
 	}
 
