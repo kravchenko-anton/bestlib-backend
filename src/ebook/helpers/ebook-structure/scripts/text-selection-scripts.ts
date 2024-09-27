@@ -117,16 +117,13 @@ selectMenu.style.visibility = 'hidden';
 
 
 let isFirstSelection = true;
-document.addEventListener('touchstart', (e) => {
+document.addEventListener('click', (e) => {
 		isFirstSelection = true;
     selectMenu.style.opacity = '0';
-    setTimeout(() => {
-        selectMenu.style.display = 'none';
-        selectMenu.style.pointerEvents = 'none';
-        selectMenu.style.visibility = 'hidden';
-    }, 100);
+    selectMenu.style.display = 'none';
+		selectMenu.style.pointerEvents = 'none';
+    selectMenu.style.visibility = 'hidden';
 });
-
 
 document.addEventListener('contextmenu', (e) => {
 	isFirstSelection = true;
@@ -143,7 +140,7 @@ document.addEventListener('contextmenu', (e) => {
 	const screenHeight = window.innerHeight;
 	const isOverlappingBottom = screenHeight - rect.top < 500;
 	const topPosition =  (rect.top + window.scrollY - 250)  + 'px';
-	const bottomPosition = (rect.top + window.scrollY + 100) + 'px';
+	const bottomPosition = (rect.top + window.scrollY + rect.height + 50) + 'px';
 		selectMenu.style.top = isOverlappingBottom ? topPosition : bottomPosition;
 
 	selectMenu.style.opacity = '1';
