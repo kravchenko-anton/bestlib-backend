@@ -7,5 +7,10 @@ export const calculateReadingTime = (words: number) => {
 export const minutesToTime = (minutes: number) => {
 	const hours = Math.floor(minutes / 60);
 	const remainingMinutes = minutes % 60;
-	return `${hours}h ${remainingMinutes}m`;
+	return `${hours}h ${Math.ceil(remainingMinutes)}m`;
+};
+
+export const msToTime = (ms: number) => {
+	const minutes = ms / 60_000;
+	return minutesToTime(minutes);
 };

@@ -1,3 +1,4 @@
+import { msToTime } from '@/src/book/helpers/calculateReadingTime';
 import type { ReadingHistory } from '@/src/user/user.dto';
 import {
 	userCatalogFields,
@@ -10,6 +11,7 @@ import {
 import { statisticReduce } from '@/src/utils/services/statisticReduce.service';
 import { HttpStatus, Injectable } from '@nestjs/common';
 import type { Prisma } from '@prisma/client';
+import dayjs from 'dayjs';
 import { idSelect } from '../utils/common/return.default.object';
 import { serverError } from '../utils/helpers/server-error';
 import { PrismaService } from '../utils/services/prisma.service';
@@ -44,31 +46,30 @@ export class UserService {
 		});
 	}
 	async userStatistics(userId: string) {
-		//TODO: сделать тут нормалный sql запрос на получение истории
-		const user = await this.prisma.user.findUnique({
-			where: { id: userId },
-			select: {
-				goalMinutes: true
-			}
-		});
-		if (!user) throw serverError(HttpStatus.BAD_REQUEST, "User doesn't exist");
-		const userHistory = await this.prisma.readingHistory.findMany({
-			where: { userId },
-			select: {
-				id: true,
-				endDate: true,
-				progressDelta: true,
-				readingTimeMs: true,
-				startDate: true
-			}
-		});
-		//TODO: сделать по нормальному
-		return {
-			userSteak: 1,
-			pepTalk: 'ads',
-			progressByCurrentWeek: [] as any[],
-			goalMinutes: user.goalMinutes
-		};
+		const lastMonthDate = dayjs().subtract(1, 'month').startOf('day').toDate();
+
+		const rawResult = (await this.prisma.$queryRaw`
+  SELECT
+    DATE("startDate") AS "date",
+    SUM("readingTimeMs") AS "totalReadingTimeMs"
+  FROM
+    "ReadingHistory"
+  WHERE
+    "userId" = ${userId}
+    AND "startDate" >= ${lastMonthDate}
+  GROUP BY
+    DATE("startDate")
+  ORDER BY
+    DATE("startDate") ASC;
+`) as {
+			date: Date;
+			totalReadingTimeMs: number;
+		}[];
+
+		return rawResult.map(row => ({
+			date: row.date,
+			totalReadingTime: msToTime(Number(row.totalReadingTimeMs))
+		}));
 	}
 
 	async syncHistory(userId: string, dto: ReadingHistory[]) {

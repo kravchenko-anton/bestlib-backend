@@ -43,6 +43,7 @@ export const selectMenuActions = `
 			const activeSelection = window.getSelection().toString();
 			if (!activeSelection) return;
 			selectionText = activeSelection;
+			
 		})
 
 	
@@ -116,7 +117,7 @@ selectMenu.style.visibility = 'hidden';
 
 
 let isFirstSelection = true;
-document.addEventListener('click', (e) => {
+document.addEventListener('touchstart', (e) => {
 		isFirstSelection = true;
     selectMenu.style.opacity = '0';
     setTimeout(() => {

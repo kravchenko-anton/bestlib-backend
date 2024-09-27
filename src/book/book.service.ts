@@ -183,7 +183,7 @@ export class BookService {
 	}
 
 	async create(dto: CreateBookDto) {
-		console.log('try to create book', dto);
+		console.log('try to create book', dto.title);
 		const { genreIds, mainGenreId } = await this.getGenres(dto.genres);
 		console.log('get genres for book', genreIds, mainGenreId);
 

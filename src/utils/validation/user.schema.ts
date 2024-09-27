@@ -70,15 +70,6 @@ export const HistorySchema = z.object({
 });
 
 export const UserStatisticsSchema = z.object({
-	progressByCurrentWeek: z.array(
-		z.object({
-			day: z.string(),
-			isCurrentDay: z.boolean(),
-			readingTimeMs: z.number(),
-			dayProgress: z.number()
-		})
-	),
-	pepTalk: z.string(),
-	goalMinutes: z.number(),
-	userSteak: z.number()
+	date: z.date(),
+	totalReadingTime: z.string()
 });

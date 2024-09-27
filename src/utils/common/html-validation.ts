@@ -39,7 +39,8 @@ export const checkHtmlValid = async (html: string) => {
 	const skippedErrors = [
 		'Element “dl” is missing a required child element',
 		'Section lacks heading',
-		'This document appears to be written in Russian'
+		'This document appears to be written in Russian',
+		'Element “poem” not allowed as child'
 	];
 	const messages = request.data.messages
 		.filter(

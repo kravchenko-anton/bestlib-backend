@@ -24,10 +24,4 @@ export class CatalogController {
 	async featured(@CurrentUser('id') userId: string): Promise<FeaturedOutput> {
 		return this.catalogService.featured(userId);
 	}
-
-	@Get('/picks-of-the-week')
-	@ApiOkResponse({ type: [ShortBook] })
-	async picksOfTheWeek(): Promise<ShortBook[]> {
-		return this.catalogService.picksOfTheWeek();
-	}
 }

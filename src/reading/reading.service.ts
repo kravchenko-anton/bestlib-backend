@@ -19,6 +19,7 @@ export class ReadingService {
 	constructor(public configService: ConfigService<EnvConfig>) {}
 
 	async translateText(dto: TranslateText) {
+		console.log('try translate', dto);
 		return this.deepl.translateText(
 			dto.text,
 			null,
@@ -29,18 +30,14 @@ export class ReadingService {
 	async gptExplain(dto: GptExplain) {
 		if (!dto.selectedText || !dto.bookTitle)
 			throw serverError(400, 'Problem with explanation');
+		console.log('start explanation:', dto);
 		return this.openAi.chat.completions
 			.create({
 				model: 'gpt-4o-mini',
 				messages: [
 					{
 						role: 'user',
-						content: `
-							Book "${dto.bookTitle}" by ${dto.bookAuthor}.
-							Selected Text: ${dto.selectedText}.
-							Target Language: ${dto.targetLang}.
-							Analyze the following line with clarity and precision, focusing on its meaning, tone, and intent. Provide an interpretation that reflects the perspective of a thoughtful and refined individual. Be concise, insightful, and maintain a formal tone throughout
-							`
+						content: `Explain the word/expression ‘${dto.selectedText.length}’ in a simple and short sentence to make it interesting and understandable. book: ${dto.bookTitle} by ${dto.bookAuthor}. Answer in "${dto.targetLang}" language`
 					}
 				]
 			})

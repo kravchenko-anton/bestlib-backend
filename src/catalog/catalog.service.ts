@@ -16,7 +16,7 @@ export class CatalogService {
 	) {}
 
 	search(query: string) {
-		console.log(' start searching for:', query);
+		console.log('start searching for:', query);
 		return this.prisma.book.findMany({
 			where: catalogSearchFields(query),
 			select: returnBookObject
@@ -25,46 +25,58 @@ export class CatalogService {
 
 	async featured(userId: string) {
 		console.log('start featured for:', userId);
-		const alreadyUsedBookId: string[] = [];
+		const alreadyUsedBookId: Set<string> = new Set();
+
 		const pushBooks = (books: ShortBook[]) => {
-			alreadyUsedBookId.push(...books.map(book => book.id));
+			for (const book of books) alreadyUsedBookId.add(book.id);
 			return books;
 		};
 		const userSelectedGenres =
 			await this.recommendationService.userSelectedGenresById(userId);
-		console.log('get userSelectedGenres:', userSelectedGenres);
-		const booksBySelectedGenres = userSelectedGenres.map(genre =>
-			this.prisma.book.findMany({
-				take: 10,
-				include: {
-					author: {
+		const booksBySelectedGenres = [];
+		for (const genre of userSelectedGenres) {
+			booksBySelectedGenres.push({
+				name: genre.name,
+				books: await this.prisma.book
+					.findMany({
+						take: 10,
 						select: {
 							id: true,
-							name: true
+							title: true,
+							picture: true,
+							rating: true,
+							author: {
+								select: {
+									id: true,
+									name: true
+								}
+							}
+						},
+						where: {
+							isPublic: true,
+							genres: {
+								some: {
+									id: genre.id
+								}
+							},
+							id: {
+								notIn: [...alreadyUsedBookId]
+							}
 						}
-					}
-				},
-				where: {
-					isPublic: true,
-					genres: {
-						some: {
-							id: genre.id
-						}
-					},
-					id: {
-						notIn: alreadyUsedBookId
-					}
-				}
-			})
-		);
+					})
+					.then(pushBooks)
+			});
+		}
 		console.log('get booksBySelectedGenres:', booksBySelectedGenres);
 		const response = {
-			picksOfWeek: await this.picksOfTheWeek(alreadyUsedBookId).then(pushBooks),
+			picksOfWeek: await this.picksOfTheWeek([...alreadyUsedBookId]).then(
+				pushBooks
+			),
 			genres: await this.prisma.genre.findMany({}),
-			bestSellingBooks:
-				await this.bestSellersBooks(alreadyUsedBookId).then(pushBooks),
-			newReleases: await this.newReleases(alreadyUsedBookId).then(pushBooks),
-			booksBySelectedGenres: await Promise.all(booksBySelectedGenres)
+			bestSellingBooks: await this.bestSellersBooks([
+				...alreadyUsedBookId
+			]).then(pushBooks),
+			booksBySelectedGenres
 		};
 
 		console.log('get response:', response);
@@ -80,7 +92,11 @@ export class CatalogService {
 
 		const picks = await this.prisma.book.findMany({
 			take: 10,
-			include: {
+			select: {
+				id: true,
+				title: true,
+				picture: true,
+				rating: true,
 				author: {
 					select: {
 						id: true,
@@ -116,7 +132,11 @@ export class CatalogService {
 			orderBy: {
 				rating: 'desc'
 			},
-			include: {
+			select: {
+				id: true,
+				title: true,
+				picture: true,
+				rating: true,
 				author: {
 					select: {
 						id: true,
@@ -126,32 +146,6 @@ export class CatalogService {
 			}
 		});
 		console.log('get bestSellersBooks:', books);
-		return books;
-	}
-
-	private newReleases(skippedBookById: string[] = []) {
-		console.log('start newReleases');
-		const books = this.prisma.book.findMany({
-			take: 10,
-			include: {
-				author: {
-					select: {
-						id: true,
-						name: true
-					}
-				}
-			},
-			where: {
-				isPublic: true,
-				id: {
-					notIn: skippedBookById
-				}
-			},
-			orderBy: {
-				createdAt: 'desc'
-			}
-		});
-		console.log('get newReleases:', books);
 		return books;
 	}
 }

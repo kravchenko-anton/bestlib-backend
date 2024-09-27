@@ -49,8 +49,10 @@ export class UserController {
 
 	@Auth()
 	@Post('/statistics')
-	@ApiOkResponse({ type: UserStatistics })
-	async statistics(@CurrentUser('id') userId: string): Promise<UserStatistics> {
+	@ApiOkResponse({ type: [UserStatistics] })
+	async statistics(
+		@CurrentUser('id') userId: string
+	): Promise<UserStatistics[]> {
 		return this.usersService.userStatistics(userId);
 	}
 
