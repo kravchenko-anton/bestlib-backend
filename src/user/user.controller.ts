@@ -57,15 +57,6 @@ export class UserController {
 	}
 
 	@Auth()
-	@Patch('/adjust-goal')
-	async adjustGoal(
-		@CurrentUser('id') userId: string,
-		@Query('goal') goal: number
-	) {
-		return this.usersService.adjustGoal(userId, Number(goal) || 0);
-	}
-
-	@Auth()
 	@Patch('/start-reading/:id')
 	async startReading(
 		@CurrentUser('id') userId: string,

@@ -22,161 +22,146 @@ export class UserService {
 	constructor(private readonly prisma: PrismaService) {}
 
 	async getUserById(id: string, selectObject: Prisma.UserSelect = {}) {
+		console.log('getUserById called with:', id, selectObject);
 		const user = await this.prisma.user.findUnique({
 			where: { id },
-			select: {
-				...returnUserObject,
-				...selectObject
-			}
+			select: { ...returnUserObject, ...selectObject }
 		});
 		if (!user) {
+			console.error('getUserById error: Something went wrong');
 			throw serverError(HttpStatus.BAD_REQUEST, 'Something went wrong');
 		}
+		console.log('getUserById result:', user);
 		return user;
 	}
 
-	async adjustGoal(userId: string, goal: number) {
-		if (goal % 10 !== 0 || goal < 10 || goal > 180)
-			throw serverError(HttpStatus.BAD_REQUEST, 'Invalid goal');
-		await this.prisma.user.update({
-			where: { id: userId },
-			data: {
-				goalMinutes: goal
-			}
-		});
-	}
 	async userStatistics(userId: string) {
+		console.log('userStatistics called with:', userId);
 		const lastMonthDate = dayjs().subtract(1, 'month').startOf('day').toDate();
 
 		const rawResult = (await this.prisma.$queryRaw`
-  SELECT
-    DATE("startDate") AS "date",
-    SUM("readingTimeMs") AS "totalReadingTimeMs"
-  FROM
-    "ReadingHistory"
-  WHERE
-    "userId" = ${userId}
-    AND "startDate" >= ${lastMonthDate}
-  GROUP BY
-    DATE("startDate")
-  ORDER BY
-    DATE("startDate") ASC;
-`) as {
+            SELECT
+                DATE("startDate") AS "date",
+                SUM("readingTimeMs") AS "totalReadingTimeMs"
+            FROM
+                "ReadingHistory"
+            WHERE
+                "userId" = ${userId}
+                AND "startDate" >= ${lastMonthDate}
+            GROUP BY
+                DATE("startDate")
+            ORDER BY
+                DATE("startDate") ASC;
+        `) as {
 			date: Date;
 			totalReadingTimeMs: number;
 		}[];
 
-		return rawResult.map(row => ({
+		const result = rawResult.map(row => ({
 			date: row.date,
 			totalReadingTime: msToTime(Number(row.totalReadingTimeMs))
 		}));
+		console.log('userStatistics result:', result);
+		return result;
 	}
 
 	async syncHistory(userId: string, dto: ReadingHistory[]) {
+		console.log('syncHistory called with:', userId, dto);
 		if (dto.length === 0) return [];
+
 		const user = await this.getUserById(userId, {
-			readingBooks: {
-				select: {
-					id: true
-				}
-			}
-		});
-		await this.prisma.readingHistory.createMany({
-			data: dto.map(({ id, ...history }) => ({
-				...history,
-				userId
-			}))
+			readingBooks: { select: { id: true } }
 		});
 		const userReadingBooks = user.readingBooks.map(book => book.id);
-		return this.prisma.readingHistory.findMany({
-			where: {
-				userId,
-				bookId: {
-					in: userReadingBooks
-				}
-			},
-			orderBy: {
-				endDate: 'desc'
-			},
+
+		await this.prisma.readingHistory.createMany({
+			data: dto.map(({ id, ...history }) => ({ ...history, userId }))
+		});
+
+		const result = await this.prisma.readingHistory.findMany({
+			where: { userId, bookId: { in: userReadingBooks } },
+			orderBy: { endDate: 'desc' },
 			distinct: ['bookId']
 		});
+		console.log('syncHistory result:', result);
+		return result;
 	}
 
 	async library(userId: string) {
+		console.log('library called with:', userId);
 		const library = await this.prisma.user.findUnique(
 			userLibraryFields(userId)
 		);
-		if (!library)
-			throw serverError(HttpStatus.BAD_REQUEST, "User doesn't exist");
+		if (!library) {
+			console.error('library error: Something went wrong');
+			throw serverError(HttpStatus.BAD_REQUEST, 'Something went wrong');
+		}
+
 		const { readingBooks, finishedBooks, savedBooks } = library;
-		return {
-			readingBooks: readingBooks
-				.map(book => {
-					const latestHistory = book.readingHistory[0] ?? null;
-					return {
-						...book,
-						readingHistory: {
-							scrollPosition: latestHistory?.scrollPosition ?? 0,
-							endDate: latestHistory?.endDate,
-							progress: latestHistory?.endProgress ?? 0
-						}
-					};
-				})
-				.sort(
-					(a, b) =>
-						(b.readingHistory?.endDate?.getTime() ?? 0) -
-						(a.readingHistory?.endDate?.getTime() ?? 0)
-				),
+
+		const result = {
+			readingBooks: readingBooks,
 			finishedBooks,
 			savedBooks
 		};
+		console.log('library result:', result);
+		return result;
 	}
 
 	async catalog(searchTerm: string, page: number) {
+		console.log('catalog called with:', searchTerm, page);
 		const perPage = 20;
 		const data = await this.prisma.user.findMany(
 			userCatalogFields({ page, perPage, searchTerm })
 		);
 		const userCount = await this.prisma.user.count();
-		return {
-			data: data.map(({ readingHistory, ...user }) => ({
+
+		const result = {
+			data: data.map(user => ({
 				...user,
 				statistics: statisticReduce({
-					statistics: readingHistory.map(({ ...history }) => ({
-						...history
-					})),
+					statistics: user.readingHistory.map(history => ({ ...history })),
 					initialDate: user.createdAt
 				})
 			})),
 			canLoadMore: page < Math.floor(userCount / perPage),
-			totalPages: Math.floor(userCount / perPage)
+			totalPages: Math.ceil(userCount / perPage)
 		};
+		console.log('catalog result:', result);
+		return result;
 	}
 
-	async remove(id: string) {
-		const user = await this.getUserById(id);
-		await this.prisma.user.delete({
-			where: { id: user.id }
-		});
+	async remove(userId: string) {
+		console.log('remove called with:', userId);
+		const user = await this.getUserById(userId);
+		await this.prisma.user.delete({ where: { id: user.id } });
+		console.log('remove completed for userId:', userId);
 	}
 
-	async startReading(userId: string, id: string) {
-		await this.checkBookExist(id);
+	async startReading(userId: string, bookId: string) {
+		console.log('startReading called with:', userId, bookId);
 		const user = await this.getUserById(userId, {
 			readingBooks: idSelect,
 			finishedBooks: idSelect
 		});
+		const isAlreadyReading = user.readingBooks.some(book => book.id === bookId);
 
-		const isReadingExist = user.readingBooks.some(book => book.id === id);
-		if (isReadingExist) return;
-
-		await this.prisma.user.update({
-			where: { id: user.id },
-			data: userStartReadingBookFields(id)
-		});
+		if (!isAlreadyReading) {
+			await this.prisma.user.update({
+				where: { id: user.id },
+				data: userStartReadingBookFields(bookId)
+			});
+		}
+		console.log(
+			'startReading completed for userId:',
+			userId,
+			'bookId:',
+			bookId
+		);
 	}
-	async removeFromLibrary(userId: string, id: string) {
-		await this.checkBookExist(id);
+
+	async removeFromLibrary(userId: string, bookId: string) {
+		console.log('removeFromLibrary called with:', userId, bookId);
 		const user = await this.getUserById(userId, {
 			readingBooks: idSelect,
 			finishedBooks: idSelect,
@@ -185,71 +170,69 @@ export class UserService {
 
 		await this.prisma.user.update({
 			where: { id: user.id },
-			data: userRemoveFromLibraryFields(id)
+			data: userRemoveFromLibraryFields(bookId)
 		});
+		console.log(
+			'removeFromLibrary completed for userId:',
+			userId,
+			'bookId:',
+			bookId
+		);
 	}
 
-	async finishReading(userId: string, id: string) {
-		await this.checkBookExist(id);
-		const user = await this.getUserById(userId, {
-			readingBooks: idSelect
-		});
-		const isReadingExist = user.readingBooks.some(book => book.id === id);
-		if (!isReadingExist) return;
+	async finishReading(userId: string, bookId: string) {
+		console.log('finishReading called with:', userId, bookId);
+		const user = await this.getUserById(userId, { readingBooks: idSelect });
+		const isReadingExist = user.readingBooks.some(book => book.id === bookId);
+
+		if (isReadingExist) {
+			await this.prisma.user.update({
+				where: { id: user.id },
+				data: userFinishReadingBookFields(bookId)
+			});
+		}
+		console.log(
+			'finishReading completed for userId:',
+			userId,
+			'bookId:',
+			bookId
+		);
+	}
+
+	async toggleSave(userId: string, bookId: string) {
+		console.log('toggleSave called with:', userId, bookId);
+		const user = await this.getUserById(userId, { savedBooks: idSelect });
+		const isSavedExist = user.savedBooks.some(book => book.id === bookId);
 
 		await this.prisma.user.update({
 			where: { id: user.id },
-			data: userFinishReadingBookFields(id)
+			data: userToggleSaveFields({ id: bookId, isSavedExist })
 		});
+
+		const result = !isSavedExist;
+		console.log(
+			'toggleSave result for userId:',
+			userId,
+			'bookId:',
+			bookId,
+			'result:',
+			result
+		);
+		return result;
 	}
 
-	async toggleSave(userId: string, id: string) {
-		await this.checkBookExist(id);
-		const user = await this.prisma.user.findUnique({
-			where: { id: userId },
-			select: {
-				id: true,
-				savedBooks: idSelect
-			}
-		});
-		if (!user) throw serverError(HttpStatus.BAD_REQUEST, "User doesn't exist");
-		const isSavedExist = user.savedBooks.some(book => book.id === id);
-
-		await this.prisma.user.update({
-			where: { id: user.id },
-			data: userToggleSaveFields({
-				id,
-				isSavedExist
-			})
-		});
-
-		return !isSavedExist;
-	}
-
-	public async isSaved(userId: string, id: string) {
-		await this.checkBookExist(id);
-		const user = await this.prisma.user.findUnique({
-			where: { id: userId },
-			select: {
-				id: true,
-				savedBooks: idSelect
-			}
-		});
-		if (!user)
-			throw serverError(HttpStatus.BAD_REQUEST, "Something's wrong, try again");
-		return user.savedBooks.some(book => book.id === id);
-	}
-
-	private async checkBookExist(id: string) {
-		const book = await this.prisma.book.findUnique({
-			where: { id, isPublic: true },
-			select: {
-				id: true,
-				title: true
-			}
-		});
-		if (!book)
-			throw serverError(HttpStatus.BAD_REQUEST, 'Something went wrong');
-		return !!book;
+	public async isSaved(userId: string, bookId: string) {
+		console.log('isSaved called with:', userId, bookId);
+		const user = await this.getUserById(userId, { savedBooks: idSelect });
+		const result = user.savedBooks.some(book => book.id === bookId);
+		console.log(
+			'isSaved result for userId:',
+			userId,
+			'bookId:',
+			bookId,
+			'result:',
+			result
+		);
+		return result;
 	}
 }

@@ -22,6 +22,7 @@ export class BookService {
 	constructor(private readonly prisma: PrismaService) {}
 
 	async infoById(id: string) {
+		console.log('BookService.infoById called with id:', id);
 		const wordCount = await this.prisma.chapter.aggregate({
 			where: {
 				bookId: id
@@ -55,8 +56,8 @@ export class BookService {
 
 		if (!book)
 			throw serverError(HttpStatus.BAD_REQUEST, "Something's wrong, try again");
-		console.log('book was found', book);
-		return {
+
+		const response = {
 			...book,
 			readingTime: minutesToTime(
 				calculateReadingTime(Number(wordCount._sum?.wordCount)) || 0
@@ -72,9 +73,12 @@ export class BookService {
 				select: returnBookObject
 			})
 		};
+		console.log('BookService.infoById response:', response);
+		return response;
 	}
 
 	async infoByIdAdmin(id: string) {
+		console.log('BookService.infoByIdAdmin called with id:', id);
 		const book = await this.prisma.book.findUnique({
 			where: { id },
 			select: {
@@ -101,7 +105,6 @@ export class BookService {
 						savedBy: true
 					}
 				},
-
 				readingHistory: {
 					where: {
 						bookId: id
@@ -121,9 +124,9 @@ export class BookService {
 		});
 		if (!book)
 			throw serverError(HttpStatus.BAD_REQUEST, "Something's wrong, try again");
-		const { readingHistory = [], ...rest } = book;
 
-		return {
+		const { readingHistory = [], ...rest } = book;
+		const response = {
 			...rest,
 			statistics: statisticReduce({
 				statistics: readingHistory.map(statistics => ({
@@ -133,13 +136,20 @@ export class BookService {
 				nowDate: true
 			})
 		};
+		console.log('BookService.infoByIdAdmin response:', response);
+		return response;
 	}
 
 	async catalog(searchTerm: string, page: number) {
-		console.log('try to get book catalog', searchTerm, page);
-		const perPage = 20;
+		console.log(
+			'BookService.catalog called with searchTerm:',
+			searchTerm,
+			'and page:',
+			page
+		);
+		const perPage = 100;
 		const count = await this.prisma.book.count();
-		return {
+		const response = {
 			data: await this.prisma.book.findMany({
 				take: perPage,
 				select: {
@@ -180,19 +190,19 @@ export class BookService {
 			canLoadMore: page < Math.floor(count / perPage),
 			totalPages: Math.floor(count / perPage)
 		};
+		console.log('BookService.catalog response:', response);
+		return response;
 	}
 
 	async create(dto: CreateBookDto) {
-		console.log('try to create book', dto.title);
+		console.log('BookService.create called with dto:', dto);
 		const { genreIds, mainGenreId } = await this.getGenres(dto.genres);
-		console.log('get genres for book', genreIds, mainGenreId);
 
 		const { isValid, messages } = await checkHtmlValid(
 			dto.chapters.map(book => book.content).join('')
 		);
 
 		if (!isValid) throw serverError(HttpStatus.BAD_REQUEST, messages);
-		console.log('try to create book', dto.title);
 		const book = await this.prisma.book.create({
 			data: {
 				summary: dto.summary,
@@ -216,7 +226,6 @@ export class BookService {
 				}
 			}
 		});
-		console.log('book created success, try create chapters');
 
 		await this.prisma.chapter.createMany({
 			data: dto.chapters.map(chapter => ({
@@ -224,16 +233,17 @@ export class BookService {
 				...chapter
 			}))
 		});
-		console.log('chapters created success');
+		console.log('BookService.create created book:', book);
 	}
 
 	async remove(id: string) {
-		//TODO: сделать так, чтобы при удалении книги удалялись все статистики по ней
-		console.log('try to delete book', id);
+		console.log('BookService.remove called with id:', id);
 		await this.prisma.book.delete({ where: { id } });
+		console.log('BookService.remove deleted book with id:', id);
 	}
 
 	async review(id: string, dto: CreateImpressionDto) {
+		console.log('BookService.review called with id:', id, 'and dto:', dto);
 		await this.prisma.impression.create({
 			data: {
 				userId: id,
@@ -243,9 +253,14 @@ export class BookService {
 				tags: dto.tags || []
 			}
 		});
+		console.log(
+			'BookService.review created impression for bookId:',
+			dto.bookId
+		);
 	}
-	//TODO: переделать обновление  с такого на более лучшее
+
 	async update(id: string, dto: UpdateBookDto) {
+		console.log('BookService.update called with id:', id, 'and dto:', dto);
 		const { genres, authorId, ...rest } = dto;
 		let updateData: UpdateBookDtoExtended = rest;
 
@@ -283,9 +298,11 @@ export class BookService {
 			where: { id: id },
 			data: updateData
 		});
+		console.log('BookService.update updated book with id:', id);
 	}
 
 	async getGenres(genres: Book['genres']) {
+		console.log('BookService.getGenres called with genres:', genres);
 		const mainGenre = await this.prisma.genre.findFirst({
 			where: {
 				id: {
@@ -303,9 +320,11 @@ export class BookService {
 		});
 		if (genres.length < 2 || !mainGenre)
 			throw serverError(HttpStatus.BAD_REQUEST, "Something's wrong, try again");
-		return {
+		const response = {
 			mainGenreId: mainGenre.id,
 			genreIds: genres.map(({ id }) => ({ id }))
 		};
+		console.log('BookService.getGenres response:', response);
+		return response;
 	}
 }

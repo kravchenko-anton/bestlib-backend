@@ -1,5 +1,4 @@
-import { HttpStatus, Injectable } from '@nestjs/common';
-import { serverError } from '../utils/helpers/server-error';
+import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../utils/services/prisma.service';
 import type { UpdateRecommendationDto } from './recommendation.dto';
 
@@ -20,7 +19,6 @@ export class RecommendationService {
 	}
 
 	async updateSelectedGenres(id: string, dto: UpdateRecommendationDto) {
-		await this.checkUserExist(id);
 		const selectedGenres = await this.prisma.genre.findMany({
 			where: {
 				id: {
@@ -40,17 +38,5 @@ export class RecommendationService {
 				}
 			}
 		});
-	}
-
-	private async checkUserExist(id: string) {
-		const userExist = await this.prisma.user.findUnique({
-			where: { id: id },
-			select: {
-				id: true
-			}
-		});
-		if (!userExist)
-			throw serverError(HttpStatus.BAD_REQUEST, 'Something went wrong');
-		return !!userExist;
 	}
 }

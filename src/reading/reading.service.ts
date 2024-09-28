@@ -19,20 +19,29 @@ export class ReadingService {
 	constructor(public configService: ConfigService<EnvConfig>) {}
 
 	async translateText(dto: TranslateText) {
-		console.log('try translate', dto);
-		return this.deepl.translateText(
-			dto.text,
-			null,
-			dto.targetLang as TargetLanguageCode
-		);
+		console.log('translateText called with:', dto);
+		try {
+			const result = await this.deepl.translateText(
+				dto.text,
+				null,
+				dto.targetLang as TargetLanguageCode
+			);
+			console.log('translateText result:', result);
+			return result;
+		} catch (error) {
+			console.error('translateText error:', error);
+			throw error;
+		}
 	}
 
 	async gptExplain(dto: GptExplain) {
-		if (!dto.selectedText || !dto.bookTitle)
+		console.log('gptExplain called with:', dto);
+		if (!dto.selectedText || !dto.bookTitle) {
+			console.error('gptExplain error: Problem with explanation');
 			throw serverError(400, 'Problem with explanation');
-		console.log('start explanation:', dto);
-		return this.openAi.chat.completions
-			.create({
+		}
+		try {
+			const response = await this.openAi.chat.completions.create({
 				model: 'gpt-4o-mini',
 				messages: [
 					{
@@ -40,15 +49,17 @@ export class ReadingService {
 						content: `Explain the word/expression ‘${dto.selectedText.length}’ in a simple and short sentence to make it interesting and understandable. book: ${dto.bookTitle} by ${dto.bookAuthor}. Answer in "${dto.targetLang}" language`
 					}
 				]
-			})
-			.catch(error => {
-				console.error(error);
-				throw serverError(300, 'Failed to generate explanation');
-			})
-			.then(response => {
-				if (!response.choices[0])
-					throw serverError(300, 'Failed to generate explanation');
-				return response.choices[0].message.content;
 			});
+			if (!response.choices[0]) {
+				console.error('gptExplain error: Failed to generate explanation');
+				throw serverError(300, 'Failed to generate explanation');
+			}
+			const explanation = response.choices[0].message.content;
+			console.log('gptExplain result:', explanation);
+			return explanation;
+		} catch (error) {
+			console.error('gptExplain error:', error);
+			throw serverError(300, 'Failed to generate explanation');
+		}
 	}
 }

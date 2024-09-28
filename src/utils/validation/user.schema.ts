@@ -41,18 +41,7 @@ export const UserCatalogOutputSchema = z
 	.merge(BaseCatalogSchema);
 
 export const UserLibraryOutputSchema = z.object({
-	readingBooks: z.array(
-		ShortBookSchema.merge(
-			z.object({
-				readingHistory: z
-					.object({
-						progress: z.number(),
-						scrollPosition: z.number()
-					})
-					.nullable()
-			})
-		)
-	),
+	readingBooks: z.array(ShortBookSchema),
 	finishedBooks: z.array(ShortBookSchema),
 	savedBooks: z.array(ShortBookSchema)
 });

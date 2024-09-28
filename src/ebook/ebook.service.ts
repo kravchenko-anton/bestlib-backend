@@ -9,14 +9,18 @@ import { ebookProcessing } from '@/src/ebook/helpers/unfold/unfold-ebook';
 import { serverError } from '@/src/utils/helpers/server-error';
 import { slugify } from '@/src/utils/helpers/slugify';
 import { PrismaService } from '@/src/utils/services/prisma.service';
-import { HttpStatus, Injectable } from '@nestjs/common';
-
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { HttpStatus, Inject, Injectable } from '@nestjs/common';
+import * as cacheManagerType from 'cache-manager';
 import { JSDOM } from 'jsdom';
-import { UpdateChapterDto } from 'src/ebook/ebook.dto';
+import { EbookOutput, UpdateChapterDto } from 'src/ebook/ebook.dto';
 
 @Injectable()
 export class EbookService {
-	constructor(private readonly prisma: PrismaService) {}
+	constructor(
+		private readonly prisma: PrismaService,
+		@Inject(CACHE_MANAGER) private cacheManager: cacheManagerType.Cache
+	) {}
 
 	async updateChapter(chapterId: string, dto: UpdateChapterDto) {
 		console.log('start updating chapter:', chapterId, dto);
@@ -51,8 +55,13 @@ export class EbookService {
 		});
 	}
 	async ebookById(bookId: string) {
-		//TODO: сделать получение твоих цытат и сразу проверку на существование + gold цытаты
 		console.log("start getting ebook's content by id:", bookId);
+
+		const cachedEbook = await this.cacheManager.get(`ebook_answer_${bookId}`);
+		if (cachedEbook) {
+			console.log('Returning cached ebook:', bookId);
+			return cachedEbook as EbookOutput;
+		}
 		const book = await this.prisma.book.findUnique({
 			where: { id: bookId },
 			select: {
@@ -79,9 +88,12 @@ export class EbookService {
 				picture: true
 			}
 		});
+
 		if (!book)
 			throw serverError(HttpStatus.BAD_REQUEST, "Something's wrong, try again");
+
 		console.log('get ebookById:', book.title);
+
 		const ebook = book.chapters.map(
 			({ content, position, title, id, wordCount }) =>
 				getChapterStructure({
@@ -95,11 +107,11 @@ export class EbookService {
 		);
 
 		const dom = new JSDOM(ebook.join(''));
-		console.log('start with jsdom');
-
 		const file = dom.window.document.body.innerHTML.toString();
+
 		console.log('return result', book.title);
-		return {
+
+		const ebookResult = {
 			...book,
 			onLoadScript: onLoadScript,
 			file: getHtmlStructure(file, book.picture, book.title),
@@ -114,6 +126,14 @@ export class EbookService {
 				link: `${slugify(title)}_${id}`
 			}))
 		};
+
+		await this.cacheManager.set(
+			`ebook_answer_${bookId}`,
+			ebookResult,
+			60 * 60 * 2
+		);
+
+		return ebookResult;
 	}
 
 	async unfold(file: Express.Multer.File) {

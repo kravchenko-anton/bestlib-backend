@@ -10,7 +10,14 @@ import {
 @Injectable()
 export class ReactionService {
 	constructor(private readonly prisma: PrismaService) {}
+
 	async syncReaction(userId: string, dto: ReactionPayload) {
+		console.log(
+			'ReactionService.syncReaction called with userId:',
+			userId,
+			'and dto:',
+			dto
+		);
 		await this.prisma.$transaction(async prisma => {
 			await prisma.reaction.createMany({
 				data: dto.create.map(reaction => ({
@@ -38,7 +45,7 @@ export class ReactionService {
 				}
 			});
 		});
-		return this.prisma.reaction.findMany({
+		const reactions = await this.prisma.reaction.findMany({
 			where: {
 				userId
 			},
@@ -65,8 +72,17 @@ export class ReactionService {
 				}
 			}
 		});
+		console.log('ReactionService.syncReaction response:', reactions);
+		return reactions;
 	}
+
 	async create(userId: string, createReactionDto: CreateReaction) {
+		console.log(
+			'ReactionService.create called with userId:',
+			userId,
+			'and createReactionDto:',
+			createReactionDto
+		);
 		const reactionsInXpath = await this.prisma.reaction.findMany({
 			where: {
 				userId,
@@ -87,8 +103,8 @@ export class ReactionService {
 				);
 			}
 		}
-
-		return this.prisma.reaction.create({
+		//TODO: adding checking existing reaction in the ebook
+		const newReaction = await this.prisma.reaction.create({
 			data: {
 				userId,
 				bookId: createReactionDto.bookId,
@@ -100,26 +116,42 @@ export class ReactionService {
 				endOffset: createReactionDto.endOffset
 			}
 		});
+		console.log('ReactionService.create response:', newReaction);
+		return newReaction;
 	}
 
 	async update(userId: string, updateReactionDto: UpdateReaction) {
+		console.log(
+			'ReactionService.update called with userId:',
+			userId,
+			'and updateReactionDto:',
+			updateReactionDto
+		);
 		const reaction = await this.prisma.reaction.findUnique({
 			where: { id: updateReactionDto.id }
 		});
 		if (!reaction) {
 			throw serverError(HttpStatus.BAD_REQUEST, "Reaction doesn't exist");
 		}
-		return this.prisma.reaction.update({
+		const updatedReaction = await this.prisma.reaction.update({
 			where: {
 				userId: userId,
 				id: updateReactionDto.id
 			},
 			data: updateReactionDto
 		});
+		console.log('ReactionService.update response:', updatedReaction);
+		return updatedReaction;
 	}
 
 	async reactionByBook(booId: string, userId: string) {
-		return this.prisma.reaction.findMany({
+		console.log(
+			'ReactionService.reactionByBook called with booId:',
+			booId,
+			'and userId:',
+			userId
+		);
+		const reactions = await this.prisma.reaction.findMany({
 			where: {
 				userId,
 				book: {
@@ -137,9 +169,12 @@ export class ReactionService {
 				type: true
 			}
 		});
+		console.log('ReactionService.reactionByBook response:', reactions);
+		return reactions;
 	}
 
 	async reactionList(userId: string) {
+		console.log('ReactionService.reactionList called with userId:', userId);
 		const reactionsCount = await this.prisma.reaction.groupBy({
 			by: ['bookId'],
 			_count: {
@@ -172,7 +207,7 @@ export class ReactionService {
 				author: true
 			}
 		});
-		return reactionsCount.map(reaction => {
+		const response = reactionsCount.map(reaction => {
 			const book = books.find(book => book.id === reaction.bookId);
 			if (!book) return null;
 			return {
@@ -180,20 +215,30 @@ export class ReactionService {
 				count: reaction._count.id
 			};
 		});
+		console.log('ReactionService.reactionList response:', response);
+		return response;
 	}
 
 	async remove(id: string, userId: string) {
+		console.log(
+			'ReactionService.remove called with id:',
+			id,
+			'and userId:',
+			userId
+		);
 		const reactionById = await this.prisma.reaction.findUnique({
 			where: { id }
 		});
 		if (!reactionById) {
 			throw serverError(HttpStatus.BAD_REQUEST, "Reaction doesn't exist");
 		}
-		return this.prisma.reaction.delete({
+		const deletedReaction = await this.prisma.reaction.delete({
 			where: {
 				id,
 				userId
 			}
 		});
+		console.log('ReactionService.remove response:', deletedReaction);
+		return deletedReaction;
 	}
 }

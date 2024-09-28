@@ -1,14 +1,29 @@
 import { serverError } from '@/src/utils/helpers/server-error';
 import { PrismaService } from '@/src/utils/services/prisma.service';
-import { HttpStatus, Injectable } from '@nestjs/common';
-import { CreateAuthorDto, ShortAuthorDto } from 'src/author/author.dto';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { HttpStatus, Inject, Injectable } from '@nestjs/common';
+import * as cacheManagerType from 'cache-manager';
+import {
+	AuthorDto,
+	CreateAuthorDto,
+	ShortAuthorDto
+} from 'src/author/author.dto';
 
 @Injectable()
 export class AuthorService {
-	constructor(private readonly prisma: PrismaService) {}
-
+	constructor(
+		private readonly prisma: PrismaService,
+		@Inject(CACHE_MANAGER) private cacheManager: cacheManagerType.Cache
+	) {}
 	async byId(id: string) {
-		console.log('try to get author by id', id);
+		console.log('AuthorService.byId called with id:', id);
+
+		const cachedAuthor = await this.cacheManager.get(`author_${id}`);
+		if (cachedAuthor) {
+			console.log('Returning cached author:', id);
+			return cachedAuthor as AuthorDto;
+		}
+
 		const author = await this.prisma.author.findUnique({
 			where: {
 				id
@@ -29,39 +44,56 @@ export class AuthorService {
 			}
 		});
 		if (!author) throw serverError(HttpStatus.BAD_REQUEST, 'Author not found');
+
+		await this.cacheManager.set(`author_${id}`, author, 60 * 60 * 24);
+
+		console.log('AuthorService.byId response:', author);
 		return author;
 	}
 
 	create(dto: Required<CreateAuthorDto>) {
-		console.log('try to create author', dto);
+		console.log('AuthorService.create called with dto:', dto);
 		const { photo, ...rest } = dto;
-		return this.prisma.author.create({
+		const author = this.prisma.author.create({
 			data: {
 				picture: photo,
 				...rest
 			}
 		});
+		console.log('AuthorService.create created author:', author);
+		return author;
 	}
+
 	update(dto: ShortAuthorDto) {
-		console.log('try to update author', dto);
-		return this.prisma.author.update({
+		console.log('AuthorService.update called with dto:', dto);
+		const author = this.prisma.author.update({
 			where: {
 				id: dto.id
 			},
 			data: dto
 		});
+		console.log('AuthorService.update updated author:', author);
+		return author;
 	}
+
 	async delete(id: string) {
-		console.log('try to delete author', id);
-		return this.prisma.author.delete({
+		console.log('AuthorService.delete called with id:', id);
+		const author = await this.prisma.author.delete({
 			where: {
 				id
 			}
 		});
+		console.log('AuthorService.delete deleted author with id:', id);
+		return author;
 	}
 
 	async catalog(searchTerm: string, page: number) {
-		console.log('try to get author catalog', searchTerm, page);
+		console.log(
+			'AuthorService.catalog called with searchTerm:',
+			searchTerm,
+			'and page:',
+			page
+		);
 		const perPage = 20;
 		const count = await this.prisma.author.count();
 		const authors = await this.prisma.author.findMany({
@@ -92,10 +124,12 @@ export class AuthorService {
 				}
 			})
 		});
-		return {
+		const response = {
 			data: authors,
 			canLoadMore: page < Math.floor(count / perPage),
 			totalPages: Math.floor(count / perPage)
 		};
+		console.log('AuthorService.catalog response:', response);
+		return response;
 	}
 }

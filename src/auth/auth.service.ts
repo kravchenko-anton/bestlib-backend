@@ -28,23 +28,21 @@ export class AuthService {
 	}
 
 	async login(dto: AuthDto) {
-		console.log('Start login', dto.email);
+		console.log('AuthService.login called with dto:', dto);
 		const user = await this.validateUser(dto);
-		console.log('User validated', user);
 		const tokens = this.issueToken(user.id);
-		console.log('Tokens issued', tokens);
-		return {
+		const response = {
 			user: this.userFields(user),
 			...tokens
 		};
+		console.log('AuthService.login response:', response);
+		return response;
 	}
 
 	async register(dto: AuthDto) {
-		console.log('Start register', dto.email);
+		console.log('AuthService.register called with dto:', dto);
 		await this.checkEmailExist(dto.email);
-		console.log('Email checked, user with this email not exist');
 		const popularGenres = await this.getPopular();
-		console.log('Popular genres fetched');
 		const user = await this.prisma.user.create({
 			data: {
 				email: dto.email,
@@ -59,17 +57,17 @@ export class AuthService {
 			}
 		});
 
-		console.log('User created successfully', user);
-
 		const tokens = this.issueToken(user.id);
-		return {
+		const response = {
 			user: this.userFields(user),
 			...tokens
 		};
+		console.log('AuthService.register response:', response);
+		return response;
 	}
 
 	async googleSign(dto: GoogleAuthDto) {
-		console.log('Start google sign in');
+		console.log('AuthService.googleSign called with dto:', dto);
 		const ticket = await this.google
 			.verifyIdToken({
 				idToken: dto.socialId,
@@ -78,9 +76,7 @@ export class AuthService {
 			.catch(() => {
 				throw serverError(HttpStatus.BAD_REQUEST, 'Invalid google token');
 			});
-		console.log('Google token verified', dto.socialId);
 		const data = ticket.getPayload();
-		console.log('Google token payload', data);
 		if (!data?.sub)
 			throw serverError(HttpStatus.BAD_REQUEST, 'Invalid google token');
 
@@ -91,28 +87,23 @@ export class AuthService {
 			}
 		});
 		if (user) {
-			console.log('User exist and i just logged in');
 			const tokens = this.issueToken(user.id);
-
-			return {
+			const response = {
 				type: 'login',
 				user: this.userFields(user),
 				...tokens
 			};
+			console.log('AuthService.googleSign login response:', response);
+			return response;
 		}
-
-		console.log('User not exist, i will register');
 
 		if (!data?.email)
 			throw serverError(
 				HttpStatus.BAD_REQUEST,
 				'There is not enough information to process'
 			);
-		console.log('Email exist, i will check it');
 		await this.checkEmailExist(data.email);
-		console.log('Email checked, user with this email not exist');
 		const popularGenres = await this.getPopular();
-		console.log('Popular genres fetched');
 		const newUser = await this.prisma.user.create({
 			data: {
 				email: data.email,
@@ -133,17 +124,19 @@ export class AuthService {
 				location: data.locale || 'unknown'
 			}
 		});
-		console.log('User created successfully', newUser);
 
 		const newTokens = this.issueToken(newUser.id);
-		return {
+		const response = {
 			type: 'register',
 			user: this.userFields(newUser),
 			...newTokens
 		};
+		console.log('AuthService.googleSign register response:', response);
+		return response;
 	}
 
 	async refresh(refreshToken: string) {
+		console.log('AuthService.refresh called with refreshToken:', refreshToken);
 		const result: { id: string } = await this.jwt
 			.verifyAsync(refreshToken)
 			.catch(error => {
@@ -157,25 +150,31 @@ export class AuthService {
 		});
 
 		const tokens = this.issueToken(user.id);
-		return {
+		const response = {
 			user,
 			...tokens
 		};
+		console.log('AuthService.refresh response:', response);
+		return response;
 	}
 
 	issueToken(userId: string) {
+		console.log('AuthService.issueToken called with userId:', userId);
 		const data = { id: userId };
-		return {
+		const tokens = {
 			accessToken: this.jwt.sign(data, {
-				expiresIn:
-					this.configService.get('NODE_ENV') === 'development' ? '10s' : '15m'
+				expiresIn: '15m'
 			}),
 			refreshToken: this.jwt.sign(data, {
 				expiresIn: '10d'
 			})
 		};
+		console.log('AuthService.issueToken tokens:', tokens);
+		return tokens;
 	}
+
 	async validateUser(dto: AuthDto) {
+		console.log('AuthService.validateUser called with dto:', dto);
 		const user = await this.prisma.user.findUnique({
 			where: {
 				email: dto.email,
@@ -188,32 +187,34 @@ export class AuthService {
 				email: true
 			}
 		});
-		console.log(user);
 		if (!user?.password)
 			throw serverError(HttpStatus.BAD_REQUEST, 'Incorrect email or password');
 		const isPasswordValid = await verify(user.password, dto.password);
 		if (!isPasswordValid)
 			throw serverError(HttpStatus.BAD_REQUEST, 'Incorrect email or password');
 
+		console.log('AuthService.validateUser validated user:', user);
 		return user;
 	}
 
 	async getPopular() {
-		return this.prisma.genre.findMany({
+		console.log('AuthService.getPopular called');
+		const popularGenres = await this.prisma.genre.findMany({
 			take: 3,
 			select: ReturnGenreObject
 		});
+		console.log('AuthService.getPopular response:', popularGenres);
+		return popularGenres;
 	}
 
 	async checkEmailExist(email: string) {
-		console.log('Checking email exist', email);
+		console.log('AuthService.checkEmailExist called with email:', email);
 		const user = await this.prisma.user.findUnique({
 			where: {
 				email
 			}
 		});
 		if (user) {
-			console.log('User with this email already exist', email);
 			throw serverError(
 				HttpStatus.BAD_REQUEST,
 				'User with this email already exist'
@@ -222,10 +223,13 @@ export class AuthService {
 	}
 
 	userFields(user: Pick<User, 'id' | 'email' | 'role'>) {
-		return {
+		console.log('AuthService.userFields called with user:', user);
+		const userFields = {
 			id: user.id,
 			email: user.email,
 			role: user.role
 		};
+		console.log('AuthService.userFields response:', userFields);
+		return userFields;
 	}
 }

@@ -1,15 +1,15 @@
+import {
+	StorageFolderArray,
+	StorageFolderType
+} from '@/src/storage/storage.types';
 import type { EnvConfig } from '@/src/utils/config/env-config';
 import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
-import { HttpStatus, Injectable, Logger } from '@nestjs/common';
+import { HttpStatus, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
 import sharp from 'sharp';
 import { serverError } from '../utils/helpers/server-error';
 import { optimizeFilename } from '../utils/helpers/string.functions';
-import {
-	StorageFolderArray,
-	StorageFolderType
-} from '@/src/storage/storage.types';
 
 @Injectable()
 export class StorageService {
@@ -33,7 +33,9 @@ export class StorageService {
 		fileName: string;
 		folder: StorageFolderType;
 	}) {
+		console.log('upload called with:', { fileName, folder });
 		if (!StorageFolderArray.includes(folder)) {
+			console.error('upload error: Invalid folder name');
 			throw serverError(HttpStatus.BAD_REQUEST, 'Invalid folder name');
 		}
 		const optimizedFile = await this.optimizeFile(file, folder);
@@ -51,39 +53,43 @@ export class StorageService {
 					ContentDisposition: 'inline'
 				})
 			)
-			.catch(() =>
-				serverError(HttpStatus.BAD_REQUEST, 'Failed to upload file')
-			);
-		Logger.log(
-			`File ${optimizedFileName} uploaded to ${folder} folder`,
-			StorageService.name
-		);
+			.catch(error => {
+				console.error('upload error: Failed to upload file', error);
+				throw serverError(HttpStatus.BAD_REQUEST, 'Failed to upload file');
+			});
+		console.log('upload result:', { name: optimizedFileName });
 		return {
 			name: optimizedFileName
 		};
 	}
 
 	private optimizeFile = async (file: Buffer, folder: string) => {
+		console.log('optimizeFile called with:', { folder });
 		switch (folder) {
 			case 'booksCovers': {
-				return sharp(file)
+				const optimized = await sharp(file)
 					.resize({
 						height: 1200,
 						width: 800
 					})
 					.toFormat('jpeg', { progressive: true, quality: 80 })
 					.toBuffer();
+				console.log('optimizeFile result for booksCovers:', optimized);
+				return optimized;
 			}
 			case 'authorsPictures': {
-				return sharp(file)
+				const optimized = await sharp(file)
 					.resize({
 						height: 500,
 						width: 500
 					})
 					.toFormat('jpeg', { progressive: true, quality: 60 })
 					.toBuffer();
+				console.log('optimizeFile result for authorsPictures:', optimized);
+				return optimized;
 			}
 			default: {
+				console.log('optimizeFile result for default:', file);
 				return file;
 			}
 		}
