@@ -240,6 +240,7 @@ export class UserService {
 		);
 
 		await this.cacheManager.del(cacheKeys.library(userId));
+		await this.cacheManager.del(cacheKeys.isSaved(userId, bookId));
 		return result;
 	}
 	public async isSaved(userId: string, bookId: string) {
