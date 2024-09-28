@@ -6,6 +6,7 @@ import {
 	onLoadScript
 } from '@/src/ebook/helpers/get-html-structure';
 import { ebookProcessing } from '@/src/ebook/helpers/unfold/unfold-ebook';
+import { cacheKeys } from '@/src/utils/common/cacheManagerKeys';
 import { serverError } from '@/src/utils/helpers/server-error';
 import { slugify } from '@/src/utils/helpers/slugify';
 import { PrismaService } from '@/src/utils/services/prisma.service';
@@ -57,7 +58,9 @@ export class EbookService {
 	async ebookById(bookId: string) {
 		console.log("start getting ebook's content by id:", bookId);
 
-		const cachedEbook = await this.cacheManager.get(`ebook_answer_${bookId}`);
+		const cachedEbook = await this.cacheManager.get(
+			cacheKeys.ebookByBookId(bookId)
+		);
 		if (cachedEbook) {
 			console.log('Returning cached ebook:', bookId);
 			return cachedEbook as EbookOutput;
@@ -128,7 +131,7 @@ export class EbookService {
 		};
 
 		await this.cacheManager.set(
-			`ebook_answer_${bookId}`,
+			cacheKeys.ebookByBookId(bookId),
 			ebookResult,
 			60 * 60 * 2
 		);

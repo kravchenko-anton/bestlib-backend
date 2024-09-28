@@ -4,25 +4,41 @@ import {
 } from '@/src/book/helpers/calculateReadingTime';
 import { returnBookObject } from '@/src/book/return.book.object';
 import { ReturnGenreObject } from '@/src/genre/return.genre.object';
+import { cacheKeys } from '@/src/utils/common/cacheManagerKeys';
 import { checkHtmlValid } from '@/src/utils/common/html-validation';
 import { statisticReduce } from '@/src/utils/services/statisticReduce.service';
-import { HttpStatus, Injectable } from '@nestjs/common';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { HttpStatus, Inject, Injectable } from '@nestjs/common';
+import * as cacheManagerType from 'cache-manager';
 import { serverError } from '../utils/helpers/server-error';
 import { PrismaService } from '../utils/services/prisma.service';
 import {
 	type Book,
 	type CreateBookDto,
 	CreateImpressionDto,
+	InfoById,
 	type UpdateBookDto
 } from './book.dto';
 import type { UpdateBookDtoExtended } from './book.types';
 
 @Injectable()
 export class BookService {
-	constructor(private readonly prisma: PrismaService) {}
+	constructor(
+		private readonly prisma: PrismaService,
+		@Inject(CACHE_MANAGER) private cacheManager: cacheManagerType.Cache
+	) {}
 
 	async infoById(id: string) {
 		console.log('BookService.infoById called with id:', id);
+
+		const cachedData = await this.cacheManager.get<InfoById>(
+			cacheKeys.bookInfo(id)
+		);
+		if (cachedData) {
+			console.log('Returning cached data for book id:', id);
+			return cachedData;
+		}
+
 		const wordCount = await this.prisma.chapter.aggregate({
 			where: {
 				bookId: id
@@ -74,6 +90,9 @@ export class BookService {
 			})
 		};
 		console.log('BookService.infoById response:', response);
+
+		await this.cacheManager.set(cacheKeys.bookInfo(id), response, 60 * 60);
+
 		return response;
 	}
 

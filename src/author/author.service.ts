@@ -1,3 +1,4 @@
+import { cacheKeys } from '@/src/utils/common/cacheManagerKeys';
 import { serverError } from '@/src/utils/helpers/server-error';
 import { PrismaService } from '@/src/utils/services/prisma.service';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
@@ -18,7 +19,7 @@ export class AuthorService {
 	async byId(id: string) {
 		console.log('AuthorService.byId called with id:', id);
 
-		const cachedAuthor = await this.cacheManager.get(`author_${id}`);
+		const cachedAuthor = await this.cacheManager.get(cacheKeys.authorById(id));
 		if (cachedAuthor) {
 			console.log('Returning cached author:', id);
 			return cachedAuthor as AuthorDto;
@@ -45,7 +46,7 @@ export class AuthorService {
 		});
 		if (!author) throw serverError(HttpStatus.BAD_REQUEST, 'Author not found');
 
-		await this.cacheManager.set(`author_${id}`, author, 60 * 60 * 24);
+		await this.cacheManager.set(cacheKeys.authorById(id), author, 60 * 60 * 24);
 
 		console.log('AuthorService.byId response:', author);
 		return author;

@@ -1,4 +1,5 @@
 import { FindOneGenreOutput, ShortGenre } from '@/src/genre/genre.dto';
+import { cacheKeys } from '@/src/utils/common/cacheManagerKeys';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { HttpStatus, Inject, Injectable } from '@nestjs/common';
 import * as cacheManagerType from 'cache-manager';
@@ -14,7 +15,7 @@ export class GenreService {
 		@Inject(CACHE_MANAGER) private cacheManager: cacheManagerType.Cache
 	) {}
 	async catalog() {
-		const cachedCatalog = await this.cacheManager.get(`genre_catalog`);
+		const cachedCatalog = await this.cacheManager.get(cacheKeys.genreCatalog);
 		if (cachedCatalog) {
 			console.log('Returning cached genre catalog');
 			return cachedCatalog as ShortGenre[];
@@ -23,13 +24,15 @@ export class GenreService {
 		const genreCatalog = this.prisma.genre.findMany({
 			select: ReturnGenreObject
 		});
-		await this.cacheManager.set(`genre_catalog`, genreCatalog, 60 * 60);
+		await this.cacheManager.set(cacheKeys.genreCatalog, genreCatalog, 60 * 60);
 
 		return genreCatalog;
 	}
 
 	async byId(genreId: string) {
-		const cachedGenre = await this.cacheManager.get(`genre_${genreId}`);
+		const cachedGenre = await this.cacheManager.get(
+			cacheKeys.genreById(genreId)
+		);
 		if (cachedGenre) {
 			console.log('Returning cached genre:', genreId);
 			return cachedGenre as FindOneGenreOutput;
@@ -53,7 +56,7 @@ export class GenreService {
 		if (!genre)
 			throw serverError(HttpStatus.BAD_REQUEST, "Something's wrong, try again");
 
-		await this.cacheManager.set(`genre_${genreId}`, genre, 60 * 60);
+		await this.cacheManager.set(cacheKeys.genreById(genreId), genre, 60 * 60);
 
 		return genre;
 	}

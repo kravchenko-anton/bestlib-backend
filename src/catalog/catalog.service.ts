@@ -1,6 +1,7 @@
 import { returnBookObject } from '@/src/book/return.book.object';
 import type { FeaturedOutput } from '@/src/catalog/catalog.dto';
 import { catalogSearchFields } from '@/src/catalog/catalog.fields';
+import { cacheKeys } from '@/src/utils/common/cacheManagerKeys';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Inject, Injectable } from '@nestjs/common';
 import * as cacheManagerType from 'cache-manager';
@@ -26,11 +27,12 @@ export class CatalogService {
 
 	async featured(userId: string) {
 		console.log('CatalogService.featured called with userId:', userId);
-		const cacheKey = `featured_${userId}`;
-		const cachedResponse = await this.cacheManager.get(cacheKey);
+		const cachedResponse = await this.cacheManager.get<FeaturedOutput>(
+			cacheKeys.featured(userId)
+		);
 		if (cachedResponse) {
 			console.log('Featured response from cache:', cachedResponse);
-			return cachedResponse as FeaturedOutput;
+			return cachedResponse;
 		}
 
 		const alreadyUsedBookId: Set<string> = new Set();
@@ -55,7 +57,11 @@ export class CatalogService {
 			)
 		};
 		console.log('Featured response:', response);
-		await this.cacheManager.set(cacheKey, response, 60 * 60 * 24);
+		await this.cacheManager.set(
+			cacheKeys.featured(userId),
+			response,
+			60 * 60 * 24
+		);
 		return response;
 	}
 
@@ -64,8 +70,9 @@ export class CatalogService {
 			'CatalogService.picksOfTheWeek called with skippedBookById:',
 			skippedBookById
 		);
-		const picksOfTheWeek: ShortBook[] | undefined =
-			await this.cacheManager.get('picksOfTheWeek');
+		const picksOfTheWeek = await this.cacheManager.get<ShortBook[]>(
+			cacheKeys.picksOfTheWeek
+		);
 		if (picksOfTheWeek) {
 			console.log('Picks of the week from cache:', picksOfTheWeek);
 			return picksOfTheWeek;
@@ -93,7 +100,7 @@ export class CatalogService {
 			}
 		});
 		console.log('Picks of the week from database:', picks);
-		await this.cacheManager.set('picksOfTheWeek', picks, 60 * 60 * 24);
+		await this.cacheManager.set(cacheKeys.picksOfTheWeek, picks, 60 * 60 * 24);
 		return picks;
 	}
 
@@ -146,13 +153,20 @@ export class CatalogService {
 		}
 		return booksBySelectedGenres;
 	}
-
-	private bestSellersBooks(skippedBookById: string[] = []) {
+	private async bestSellersBooks(skippedBookById: string[] = []) {
 		console.log(
 			'CatalogService.bestSellersBooks called with skippedBookById:',
 			skippedBookById
 		);
-		const books = this.prisma.book.findMany({
+		const cachedBooks = await this.cacheManager.get<ShortBook[]>(
+			cacheKeys.bestSellersBooks
+		);
+		if (cachedBooks) {
+			console.log('Best sellers books from cache:', cachedBooks);
+			return cachedBooks;
+		}
+
+		const books = await this.prisma.book.findMany({
 			take: 10,
 			where: {
 				isPublic: true,
@@ -176,7 +190,12 @@ export class CatalogService {
 				}
 			}
 		});
-		console.log('Best sellers books:', books);
+		console.log('Best sellers books from database:', books);
+		await this.cacheManager.set(
+			cacheKeys.bestSellersBooks,
+			books,
+			60 * 60 * 24
+		);
 		return books;
 	}
 }
