@@ -54,7 +54,13 @@ export class ReadingService {
 				messages: [
 					{
 						role: 'user',
-						content: `Explain the word/expression ‘${dto.selectedText.length}’ in a simple and short sentence to make it interesting and understandable. book: ${dto.bookTitle} by ${dto.bookAuthor}. Answer in "${dto.targetLang}" language`
+						content: `
+						You are an expert in literary analysis with a deep understanding of ${dto.bookAuthor} "${dto.bookTitle}" and the cultural context of his work. Analyze the selected text fragment in targetLang, considering both the literal meaning and any deeper or hidden subtext. Keep your analysis concise, focused, and insightful, without mentioning the title of the book, the author and the highlighted text itself. Just pure opinion (max pure) without water
+						Data:
+						Selected text: ${dto.selectedText}
+						Book Title: ${dto.bookTitle}
+						Book Author:${dto.bookAuthor}
+						Target Language: ${dto.targetLang}`
 					}
 				]
 			});
