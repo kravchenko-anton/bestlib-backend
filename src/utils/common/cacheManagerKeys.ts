@@ -9,5 +9,6 @@ export const cacheKeys = {
 	authorById: (authorId: string) => `authorById_${authorId}`,
 	ebookByBookId: (bookId: string) => `ebookByBookId_${bookId}`,
 	bookInfo: (bookId: string) => `bookInfo_${bookId}`,
-	bestSellersBooks: 'bestSellersBooks'
+	bestSellersBooks: 'bestSellersBooks',
+	booksBySelectedGenres: (userId: string) => `booksBySelectedGenres_${userId}`
 };

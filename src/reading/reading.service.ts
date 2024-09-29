@@ -7,6 +7,13 @@ import type { TargetLanguageCode } from 'deepl-node';
 import * as deepl from 'deepl-node';
 import OpenAI from 'openai';
 
+export const getTargetLang = (lang: string): TargetLanguageCode => {
+	if (lang === 'en') {
+		return 'en-US';
+	}
+	return lang as TargetLanguageCode;
+};
+
 @Injectable()
 export class ReadingService {
 	private readonly openAi = new OpenAI({
@@ -20,11 +27,12 @@ export class ReadingService {
 
 	async translateText(dto: TranslateText) {
 		console.log('translateText called with:', dto);
+
 		try {
 			const result = await this.deepl.translateText(
 				dto.text,
 				null,
-				dto.targetLang as TargetLanguageCode
+				getTargetLang(dto.targetLang)
 			);
 			console.log('translateText result:', result);
 			return result;

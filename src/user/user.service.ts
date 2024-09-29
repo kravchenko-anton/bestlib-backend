@@ -73,16 +73,17 @@ export class UserService {
 
 	async syncHistory(userId: string, dto: ReadingHistory[]) {
 		console.log('syncHistory called with:', userId, dto);
-		if (dto.length === 0) return [];
 
 		const user = await this.getUserById(userId, {
 			readingBooks: { select: { id: true } }
 		});
 		const userReadingBooks = user.readingBooks.map(book => book.id);
 
-		await this.prisma.readingHistory.createMany({
-			data: dto.map(({ id, ...history }) => ({ ...history, userId }))
-		});
+		if (dto.length > 0) {
+			await this.prisma.readingHistory.createMany({
+				data: dto.map(({ id, ...history }) => ({ ...history, userId }))
+			});
+		}
 
 		const result = await this.prisma.readingHistory.findMany({
 			where: { userId, bookId: { in: userReadingBooks } },

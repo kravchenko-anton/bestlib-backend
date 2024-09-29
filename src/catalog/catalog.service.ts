@@ -11,6 +11,8 @@ import { PrismaService } from '../utils/services/prisma.service';
 
 @Injectable()
 export class CatalogService {
+	timeToLive = 60 * 60 * 24;
+
 	constructor(
 		private readonly prisma: PrismaService,
 		private readonly recommendationService: RecommendationService,
@@ -50,17 +52,15 @@ export class CatalogService {
 			bestSellingBooks: await this.bestSellersBooks([
 				...alreadyUsedBookId
 			]).then(pushBooks),
-			booksBySelectedGenres: await this.booksBySelectedGenres(
-				userId,
-				[...alreadyUsedBookId],
-				pushBooks
-			)
+			booksBySelectedGenres: await this.booksBySelectedGenres(userId, [
+				...alreadyUsedBookId
+			])
 		};
 		console.log('Featured response:', response);
 		await this.cacheManager.set(
 			cacheKeys.featured(userId),
 			response,
-			60 * 60 * 24
+			this.timeToLive
 		);
 		return response;
 	}
@@ -100,24 +100,39 @@ export class CatalogService {
 			}
 		});
 		console.log('Picks of the week from database:', picks);
-		await this.cacheManager.set(cacheKeys.picksOfTheWeek, picks, 60 * 60 * 24);
+		await this.cacheManager.set(
+			cacheKeys.picksOfTheWeek,
+			picks,
+			this.timeToLive
+		);
 		return picks;
 	}
 
 	private async booksBySelectedGenres(
 		userId: string,
-		alreadyUsedBookId: string[] = [],
-		pushBooks: (books: ShortBook[]) => ShortBook[] = books => books
+		alreadyUsedBookId: string[] = []
 	) {
 		console.log(
 			'CatalogService.booksBySelectedGenres called with userId:',
 			userId
 		);
+		const cachedBooksBySelectedGenres = await this.cacheManager.get<
+			FeaturedOutput['booksBySelectedGenres']
+		>(cacheKeys.booksBySelectedGenres(userId));
+		if (cachedBooksBySelectedGenres) {
+			console.log(
+				'Books by selected genres from cache:',
+				cachedBooksBySelectedGenres
+			);
+			return cachedBooksBySelectedGenres;
+		}
+
 		const userSelectedGenres =
 			await this.recommendationService.userSelectedGenresById(userId);
 		console.log('User selected genres:', userSelectedGenres);
 
 		const booksBySelectedGenres = [];
+		const alreadyUsedBookIdSet = new Set(alreadyUsedBookId);
 		for (const genre of userSelectedGenres) {
 			const books = await this.prisma.book.findMany({
 				take: 10,
@@ -141,16 +156,23 @@ export class CatalogService {
 						}
 					},
 					id: {
-						notIn: alreadyUsedBookId
+						notIn: [...alreadyUsedBookIdSet]
 					}
 				}
 			});
 			console.log(`Books for genre ${genre.name}:`, books);
 			booksBySelectedGenres.push({
 				name: genre.name,
-				books: pushBooks(books)
+				books
 			});
+			for (const book of books) alreadyUsedBookIdSet.add(book.id);
 		}
+
+		await this.cacheManager.set(
+			cacheKeys.booksBySelectedGenres(userId),
+			booksBySelectedGenres,
+			this.timeToLive
+		);
 		return booksBySelectedGenres;
 	}
 	private async bestSellersBooks(skippedBookById: string[] = []) {
@@ -194,7 +216,7 @@ export class CatalogService {
 		await this.cacheManager.set(
 			cacheKeys.bestSellersBooks,
 			books,
-			60 * 60 * 24
+			this.timeToLive
 		);
 		return books;
 	}
