@@ -1,4 +1,4 @@
-import { z } from 'zod'
+import { z } from 'zod';
 
 export const CreateReactionSchema = z.object({
 	bookId: z.string(),
@@ -8,6 +8,4 @@ export const CreateReactionSchema = z.object({
 	xpath: z.string(),
 	startOffset: z.number(),
 	endOffset: z.number()
-})
-
-export type CreateReactionSchemaType = z.infer<typeof CreateReactionSchema>
+});

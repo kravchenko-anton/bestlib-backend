@@ -55,7 +55,7 @@ export class ReadingService {
 					{
 						role: 'user',
 						content: `
-						You are an expert in literary analysis with a deep understanding of ${dto.bookAuthor} "${dto.bookTitle}" and the cultural context of his work. Analyze the selected text fragment in targetLang, considering both the literal meaning and any deeper or hidden subtext. Keep your analysis concise, focused, and insightful, without mentioning the title of the book, the author and the highlighted text itself. Just pure opinion (max pure) without water
+						You are an expert in literary analysis with a deep understanding of ${dto.bookAuthor} "${dto.bookTitle}" and the cultural context of his work. Analyze the selected text fragment in targetLang, If it is an just expression, explain its meaning and the implication the ${dto.bookAuthor} had in mind. If selectedText is the author's name, give a spoiler-free summary of the author's characterization and his main actions in the context of the work
 						Data:
 						Selected text: ${dto.selectedText}
 						Book Title: ${dto.bookTitle}

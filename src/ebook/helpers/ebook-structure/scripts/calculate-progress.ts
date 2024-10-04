@@ -1,3 +1,4 @@
+//language=TypeScript
 export const calculateProgress = `
   let currentScrollPosition = window.pageYOffset || document.documentElement.scrollTop;
   let chapters = document.querySelectorAll('section');

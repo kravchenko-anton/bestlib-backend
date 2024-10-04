@@ -124,7 +124,19 @@ document.addEventListener('click', (e) => {
 		selectMenu.style.pointerEvents = 'none';
     selectMenu.style.visibility = 'hidden';
 });
-
+document.addEventListener('scroll', () => {
+	selectMenu.style.opacity = '0';
+	selectMenu.style.pointerEvents = 'none';
+	selectMenu.style.visibility = 'hidden';
+	selectMenu.style.display = 'none';
+	if(!window.getSelection().toString()) return
+	setTimeout(() => {
+		selectMenu.style.opacity = '1';
+		selectMenu.style.pointerEvents = 'auto';
+		selectMenu.style.display = 'flex';
+		selectMenu.style.visibility = 'visible';
+	}, 1000);
+});
 document.addEventListener('contextmenu', (e) => {
 	isFirstSelection = true;
 

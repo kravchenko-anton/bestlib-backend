@@ -43,7 +43,8 @@ export class UserService {
 
 	async userStatistics(userId: string) {
 		console.log('userStatistics called with:', userId);
-		const lastMonthDate = dayjs().subtract(1, 'month').startOf('day').toDate();
+		// get like by month, if you in the middle of the month, get just current month, like if now 15 december, get 1-15 december
+		const currentMonthStartDate = dayjs().startOf('month').toDate();
 
 		const rawResult = (await this.prisma.$queryRaw`
             SELECT
@@ -53,7 +54,7 @@ export class UserService {
                 "ReadingHistory"
             WHERE
                 "userId" = ${userId}
-                AND "startDate" >= ${lastMonthDate}
+                AND "startDate" >= ${currentMonthStartDate}
             GROUP BY
                 DATE("startDate")
             ORDER BY

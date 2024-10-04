@@ -1,7 +1,7 @@
 import { reactions } from '@/src/ebook/helpers/reactions';
 
 export const selectMenuHtml = `
-<div id="select-menu" style="display: none; pointer-events: none; visibility: hidden; opacity: 0; position: absolute; left: 10px; top: 10px;  transition: all 0.3s ease-in-out;">
+<div id="select-menu" style="display: none; pointer-events: none; visibility: hidden; opacity: 0; position: absolute; right: 10px; top: 10px; transition: ease 0.2s opacity;">
 <div class="select-menu-reaction" id="select-menu-reaction">
 	${reactions.map(reaction => `<img src="${reaction.gif}" alt="${reaction.alt}" title="${reaction.title}" width="28" height="28" class="select-menu-reaction-item">`).join('')}
 </div>

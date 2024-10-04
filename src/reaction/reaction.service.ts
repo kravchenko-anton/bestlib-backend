@@ -77,33 +77,4 @@ export class ReactionService {
 		//TODO: сделать проверку на то, есть ли всё эти реакции и убрать те, которых нет
 		return reactions;
 	}
-
-	async reactionByBook(booId: string, userId: string) {
-		console.log(
-			'ReactionService.reactionByBook called with booId:',
-			booId,
-			'and userId:',
-			userId
-		);
-		const reactions = await this.prisma.reaction.findMany({
-			where: {
-				userId,
-				book: {
-					id: booId,
-					isPublic: true
-				}
-			},
-			select: {
-				id: true,
-				text: true,
-				createdAt: true,
-				endOffset: true,
-				startOffset: true,
-				xpath: true,
-				type: true
-			}
-		});
-		console.log('ReactionService.reactionByBook response:', reactions);
-		return reactions;
-	}
 }

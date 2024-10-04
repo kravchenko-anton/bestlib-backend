@@ -49,20 +49,3 @@ export const ReactionOutputSchema = z.object({
 	endOffset: z.number(),
 	book: bookInner.required()
 });
-export const ReactionListOutputSchema = z.object({
-	count: z.number(),
-	picture: z.string(),
-	id: z.string(),
-	title: z.string(),
-	author: z.string()
-});
-
-export const ReactionByBookOutputSchema = z.object({
-	id: z.string(),
-	type: z.string(),
-	text: z.string(),
-	xpath: z.string(),
-	createdAt: z.date(),
-	startOffset: z.number(),
-	endOffset: z.number()
-});
