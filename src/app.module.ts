@@ -1,3 +1,4 @@
+import { AuthorModule as AdminAuthorModule } from '@/src/author/admin/author.module';
 import { EbookModule } from '@/src/ebook/ebook.module';
 import { envConfigSchema } from '@/src/utils/config/env-config';
 import { CacheModule } from '@nestjs/cache-manager';
@@ -29,6 +30,7 @@ import { AppLoggerMiddleware } from './utils/logger/logger';
 			validate: config => envConfigSchema.parse(config)
 		}),
 		GenreModule,
+		AdminAuthorModule,
 		BookModule,
 		AuthModule,
 		StorageModule,

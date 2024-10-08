@@ -124,6 +124,7 @@ document.addEventListener('click', (e) => {
 		selectMenu.style.pointerEvents = 'none';
     selectMenu.style.visibility = 'hidden';
 });
+
 document.addEventListener('scroll', () => {
 	selectMenu.style.opacity = '0';
 	selectMenu.style.pointerEvents = 'none';

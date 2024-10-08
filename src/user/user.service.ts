@@ -1,7 +1,6 @@
 import { msToTime } from '@/src/book/helpers/calculateReadingTime';
 import { type ReadingHistory, UserLibraryOutput } from '@/src/user/user.dto';
 import {
-	userCatalogFields,
 	userFinishReadingBookFields,
 	userLibraryFields,
 	userRemoveFromLibraryFields,
@@ -9,7 +8,6 @@ import {
 	userToggleSaveFields
 } from '@/src/user/user.fields';
 import { cacheKeys } from '@/src/utils/common/cacheManagerKeys';
-import { statisticReduce } from '@/src/utils/services/statisticReduce.service';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { HttpStatus, Inject, Injectable } from '@nestjs/common';
 import type { Prisma } from '@prisma/client';
@@ -29,6 +27,7 @@ export class UserService {
 
 	async getUserById(id: string, selectObject: Prisma.UserSelect = {}) {
 		console.log('getUserById called with:', id, selectObject);
+
 		const user = await this.prisma.user.findUnique({
 			where: { id },
 			select: { ...returnUserObject, ...selectObject }
@@ -93,36 +92,6 @@ export class UserService {
 		});
 		console.log('syncHistory result:', result);
 		return result;
-	}
-
-	async catalog(searchTerm: string, page: number) {
-		console.log('catalog called with:', searchTerm, page);
-		const perPage = 20;
-		const data = await this.prisma.user.findMany(
-			userCatalogFields({ page, perPage, searchTerm })
-		);
-		const userCount = await this.prisma.user.count();
-
-		const result = {
-			data: data.map(user => ({
-				...user,
-				statistics: statisticReduce({
-					statistics: user.readingHistory.map(history => ({ ...history })),
-					initialDate: user.createdAt
-				})
-			})),
-			canLoadMore: page < Math.floor(userCount / perPage),
-			totalPages: Math.ceil(userCount / perPage)
-		};
-		console.log('catalog result:', result);
-		return result;
-	}
-
-	async remove(userId: string) {
-		console.log('remove called with:', userId);
-		const user = await this.getUserById(userId);
-		await this.prisma.user.delete({ where: { id: user.id } });
-		console.log('remove completed for userId:', userId);
 	}
 
 	async library(userId: string) {

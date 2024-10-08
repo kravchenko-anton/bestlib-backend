@@ -1,3 +1,4 @@
+import type { Book } from '@/src/book/book.dto';
 import { FindOneGenreOutput, ShortGenre } from '@/src/genre/genre.dto';
 import { cacheKeys } from '@/src/utils/common/cacheManagerKeys';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
@@ -59,5 +60,32 @@ export class GenreService {
 		await this.cacheManager.set(cacheKeys.genreById(genreId), genre, 60 * 60);
 
 		return genre;
+	}
+
+	async getGenresWithMain(genres: Book['genres']) {
+		console.log('BookService.getGenres called with genres:', genres);
+		const mainGenre = await this.prisma.genre.findFirst({
+			where: {
+				id: {
+					in: genres.map(genre => genre.id)
+				}
+			},
+			select: {
+				id: true
+			},
+			orderBy: {
+				mainBooks: {
+					_count: 'asc'
+				}
+			}
+		});
+		if (genres.length < 2 || !mainGenre)
+			throw serverError(HttpStatus.BAD_REQUEST, "Something's wrong, try again");
+		const response = {
+			mainGenreId: mainGenre.id,
+			genreIds: genres.map(({ id }) => ({ id }))
+		};
+		console.log('BookService.getGenres response:', response);
+		return response;
 	}
 }

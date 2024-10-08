@@ -1,13 +1,8 @@
-import { DocumentBuilder } from '@nestjs/swagger';
 import { appName } from '@/src/utils/constants';
+import { DocumentBuilder } from '@nestjs/swagger';
 
 export const openApiConfig = new DocumentBuilder()
 	.setTitle(appName)
-	.setContact(
-		appName,
-		'https://github.com/kravchenko-anton/booknex-2-monorepo',
-		'Github repository'
-	)
 	.setVersion('1.0')
 	.addTag('👤 user', 'user service')
 	.addTag('🔐 auth', 'auth service')

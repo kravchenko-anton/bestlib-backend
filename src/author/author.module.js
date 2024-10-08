@@ -1,4 +1,5 @@
 "use strict";
+import { BookModule } from './book/book.module';
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AuthorModule = void 0;
 const tslib_1 = require("tslib");

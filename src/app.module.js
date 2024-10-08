@@ -1,4 +1,5 @@
 "use strict";
+import { AdminModule } from './admin/admin.module';
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AppModule = void 0;
 const tslib_1 = require("tslib");

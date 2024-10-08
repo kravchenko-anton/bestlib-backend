@@ -1,13 +1,4 @@
-import {
-	Body,
-	Controller,
-	Delete,
-	Get,
-	Param,
-	Patch,
-	Post,
-	Query
-} from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Post } from '@nestjs/common';
 import {
 	ApiBearerAuth,
 	ApiBody,
@@ -16,12 +7,7 @@ import {
 } from '@nestjs/swagger';
 import { Auth } from '../auth/decorators/auth.decorator';
 import { CurrentUser } from '../auth/decorators/user.decorator';
-import {
-	ReadingHistory,
-	UserCatalogOutput,
-	UserLibraryOutput,
-	UserStatistics
-} from './user.dto';
+import { ReadingHistory, UserLibraryOutput, UserStatistics } from './user.dto';
 import { UserService } from './user.service';
 
 @ApiBearerAuth()
@@ -95,22 +81,5 @@ export class UserController {
 	@ApiOkResponse({ type: Boolean })
 	async isSaved(@CurrentUser('id') userId: string, @Param('id') id: string) {
 		return this.usersService.isSaved(userId, id);
-	}
-
-	// admin
-	@Auth('admin')
-	@Get('admin/catalog')
-	@ApiOkResponse({ type: UserCatalogOutput })
-	async catalog(
-		@Query('searchTerm') searchTerm: string,
-		@Query('cursor') cursor: number
-	): Promise<UserCatalogOutput> {
-		return this.usersService.catalog(searchTerm || '', cursor);
-	}
-
-	@Auth('admin')
-	@Delete('admin/remove/:id')
-	async remove(@Param('id') id: string) {
-		return this.usersService.remove(id);
 	}
 }

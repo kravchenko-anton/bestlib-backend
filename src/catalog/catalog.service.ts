@@ -1,6 +1,7 @@
 import { returnBookObject } from '@/src/book/return.book.object';
 import type { FeaturedOutput } from '@/src/catalog/catalog.dto';
 import { catalogSearchFields } from '@/src/catalog/catalog.fields';
+import { GenreService } from '@/src/genre/genre.service';
 import { cacheKeys } from '@/src/utils/common/cacheManagerKeys';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Inject, Injectable } from '@nestjs/common';
@@ -16,6 +17,7 @@ export class CatalogService {
 	constructor(
 		private readonly prisma: PrismaService,
 		private readonly recommendationService: RecommendationService,
+		private readonly genreService: GenreService,
 		@Inject(CACHE_MANAGER) private cacheManager: cacheManagerType.Cache
 	) {}
 
@@ -48,7 +50,7 @@ export class CatalogService {
 			picksOfWeek: await this.picksOfTheWeek([...alreadyUsedBookId]).then(
 				pushBooks
 			),
-			genres: await this.prisma.genre.findMany({}),
+			genres: await this.genreService.catalog(),
 			bestSellingBooks: await this.bestSellersBooks([
 				...alreadyUsedBookId
 			]).then(pushBooks),
